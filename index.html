@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CARNESTOLTES — YEAH! CLUB</title>
+    <title>hyejunmoon — Daily Works</title>
     <style>
         * {
             margin: 0;
@@ -12,267 +12,107 @@
         }
 
         body {
-            overflow: hidden;
-            background: #0a0a0a;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0f0f0f;
+            color: #e0e0e0;
             min-height: 100vh;
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-            cursor: crosshair;
+            padding: 4rem 2rem;
         }
 
-        .scene {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            perspective: 1000px;
+        .container {
+            max-width: 640px;
+            margin: 0 auto;
         }
 
-        .poster-wrapper {
-            position: relative;
-            transform-style: preserve-3d;
-            transition: transform 0.1s ease-out;
+        header {
+            margin-bottom: 4rem;
         }
 
-        .poster {
-            width: auto;
-            height: 85vh;
-            max-width: 90vw;
-            object-fit: contain;
-            border-radius: 4px;
-            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
-            transition: box-shadow 0.3s ease;
-        }
-
-        .poster-wrapper:hover .poster {
-            box-shadow: 0 40px 100px rgba(255, 100, 200, 0.3),
-                        0 20px 60px rgba(100, 255, 100, 0.2);
-        }
-
-        /* 배경 움직이는 그라데이션 블롭들 */
-        .blob {
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(80px);
-            opacity: 0.4;
-            animation: float 8s ease-in-out infinite;
-            pointer-events: none;
-        }
-
-        .blob-1 {
-            width: 400px;
-            height: 400px;
-            background: #ff00ff;
-            top: 10%;
-            left: 10%;
-            animation-delay: 0s;
-        }
-
-        .blob-2 {
-            width: 350px;
-            height: 350px;
-            background: #00ff88;
-            bottom: 10%;
-            right: 10%;
-            animation-delay: -3s;
-        }
-
-        .blob-3 {
-            width: 300px;
-            height: 300px;
-            background: #ffaa00;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            animation-delay: -5s;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            25% { transform: translate(30px, -40px) scale(1.1); }
-            50% { transform: translate(-20px, 20px) scale(0.95); }
-            75% { transform: translate(40px, 30px) scale(1.05); }
-        }
-
-        /* 텍스트 요소들 */
-        .floating-text {
-            position: absolute;
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
             color: #fff;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            opacity: 0.7;
-            pointer-events: none;
-            animation: drift 12s ease-in-out infinite;
+            margin-bottom: 0.5rem;
         }
 
-        .text-1 {
-            font-size: clamp(1rem, 3vw, 2.5rem);
-            top: 5%;
-            left: 5%;
-            animation-delay: 0s;
+        .subtitle {
+            color: #888;
+            font-size: 1rem;
         }
 
-        .text-2 {
-            font-size: clamp(0.8rem, 2vw, 1.5rem);
-            bottom: 8%;
-            right: 5%;
-            animation-delay: -4s;
+        .works {
+            list-style: none;
         }
 
-        .text-3 {
-            font-size: clamp(0.8rem, 2vw, 1.5rem);
-            top: 8%;
-            right: 5%;
-            animation-delay: -7s;
+        .works li {
+            border-bottom: 1px solid #222;
         }
 
-        @keyframes drift {
-            0%, 100% { transform: translate(0, 0) rotate(0deg); }
-            33% { transform: translate(10px, -10px) rotate(1deg); }
-            66% { transform: translate(-10px, 5px) rotate(-1deg); }
+        .works a {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.25rem 0;
+            text-decoration: none;
+            color: #e0e0e0;
+            transition: color 0.2s, padding-left 0.2s;
         }
 
-        /* 마우스 따라다니는 글로우 */
-        .cursor-glow {
-            position: fixed;
-            width: 200px;
-            height: 200px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(255, 0, 255, 0.15) 0%, transparent 70%);
-            pointer-events: none;
-            transform: translate(-50%, -50%);
-            transition: opacity 0.3s;
-            z-index: 100;
+        .works a:hover {
+            color: #fff;
+            padding-left: 0.5rem;
         }
 
-        /* 파티클 */
-        .particle {
-            position: absolute;
-            width: 4px;
-            height: 4px;
-            border-radius: 50%;
-            pointer-events: none;
-            animation: sparkle 3s ease-out forwards;
+        .work-title {
+            font-size: 1.1rem;
+            font-weight: 500;
         }
 
-        @keyframes sparkle {
-            0% { transform: scale(1); opacity: 1; }
-            100% { transform: scale(0) translateY(-100px); opacity: 0; }
+        .work-date {
+            font-size: 0.85rem;
+            color: #666;
+            white-space: nowrap;
+            margin-left: 1rem;
         }
 
-        /* 스캔라인 효과 */
-        .scanlines {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            background: repeating-linear-gradient(
-                0deg,
-                transparent,
-                transparent 2px,
-                rgba(0, 0, 0, 0.03) 2px,
-                rgba(0, 0, 0, 0.03) 4px
-            );
-            z-index: 50;
+        .work-tag {
+            display: inline-block;
+            font-size: 0.7rem;
+            background: #222;
+            color: #aaa;
+            padding: 0.2rem 0.5rem;
+            border-radius: 3px;
+            margin-left: 0.5rem;
+            vertical-align: middle;
         }
 
-        /* 글리치 효과 */
-        @keyframes glitch {
-            0%, 95%, 100% { transform: translate(0); filter: none; }
-            96% { transform: translate(-2px, 1px); filter: hue-rotate(90deg); }
-            97% { transform: translate(2px, -1px); filter: hue-rotate(180deg); }
-            98% { transform: translate(-1px, -1px); filter: hue-rotate(270deg); }
-        }
-
-        .poster-wrapper.glitch .poster {
-            animation: glitch 4s ease-in-out infinite;
+        footer {
+            margin-top: 4rem;
+            color: #444;
+            font-size: 0.85rem;
         }
     </style>
 </head>
 <body>
-    <div class="scene">
-        <div class="blob blob-1"></div>
-        <div class="blob blob-2"></div>
-        <div class="blob blob-3"></div>
+    <div class="container">
+        <header>
+            <h1>hyejunmoon</h1>
+            <p class="subtitle">매일 하나씩, 만들고 올리기</p>
+        </header>
 
-        <div class="poster-wrapper" id="posterWrapper">
-            <img src="poster.png" alt="CARNESTOLTES YEAH! CLUB Poster" class="poster">
-        </div>
+        <ul class="works">
+            <li>
+                <a href="/day01-poster/">
+                    <span class="work-title">Interactive Poster <span class="work-tag">animation</span></span>
+                    <span class="work-date">2025.07.21</span>
+                </a>
+            </li>
+            <!-- 새 작업물은 여기 위에 추가 -->
+        </ul>
 
-        <div class="floating-text text-1">CARNESTOLTES</div>
-        <div class="floating-text text-2">FEBRER 2026 — GIRONA</div>
-        <div class="floating-text text-3">YEAH! CLUB</div>
+        <footer>
+            &copy; 2025 hyejunmoon
+        </footer>
     </div>
-
-    <div class="cursor-glow" id="cursorGlow"></div>
-    <div class="scanlines"></div>
-
-    <script>
-        const wrapper = document.getElementById('posterWrapper');
-        const cursorGlow = document.getElementById('cursorGlow');
-        const scene = document.querySelector('.scene');
-        let mouseX = 0, mouseY = 0;
-        let currentX = 0, currentY = 0;
-
-        // 마우스 따라 포스터 3D 회전
-        document.addEventListener('mousemove', (e) => {
-            mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
-            mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
-
-            cursorGlow.style.left = e.clientX + 'px';
-            cursorGlow.style.top = e.clientY + 'px';
-        });
-
-        // 부드러운 애니메이션 루프
-        function animate() {
-            currentX += (mouseX - currentX) * 0.08;
-            currentY += (mouseY - currentY) * 0.08;
-
-            const rotateY = currentX * 15;
-            const rotateX = -currentY * 10;
-
-            wrapper.style.transform = `rotateY(${rotateY}deg) rotateX(${rotateX}deg)`;
-
-            requestAnimationFrame(animate);
-        }
-        animate();
-
-        // 클릭하면 파티클 효과
-        document.addEventListener('click', (e) => {
-            const colors = ['#ff00ff', '#00ff88', '#ffaa00', '#ff6699', '#66ffcc'];
-            for (let i = 0; i < 12; i++) {
-                const particle = document.createElement('div');
-                particle.classList.add('particle');
-                particle.style.left = e.clientX + 'px';
-                particle.style.top = e.clientY + 'px';
-                particle.style.background = colors[Math.floor(Math.random() * colors.length)];
-                particle.style.transform = `translate(${(Math.random() - 0.5) * 200}px, ${(Math.random() - 0.5) * 200}px)`;
-                particle.style.animationDuration = (1 + Math.random() * 2) + 's';
-                document.body.appendChild(particle);
-                setTimeout(() => particle.remove(), 3000);
-            }
-
-            // 글리치 효과 토글
-            wrapper.classList.add('glitch');
-            setTimeout(() => wrapper.classList.remove('glitch'), 500);
-        });
-
-        // 모바일 기울기 지원
-        if (window.DeviceOrientationEvent) {
-            window.addEventListener('deviceorientation', (e) => {
-                if (e.gamma !== null && e.beta !== null) {
-                    mouseX = (e.gamma / 45);
-                    mouseY = (e.beta - 45) / 45;
-                }
-            });
-        }
-    </script>
 </body>
 </html>
