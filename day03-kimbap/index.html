@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 03 — 김밥 만들기 | hyejunmoon</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #faf7f2;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem 1rem;
+            color: #333;
+        }
+
+        .back-link {
+            position: fixed;
+            top: 1.5rem;
+            left: 1.5rem;
+            color: #999;
+            text-decoration: none;
+            font-size: 0.9rem;
+            z-index: 200;
+            transition: color 0.2s;
+        }
+        .back-link:hover { color: #333; }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .subtitle {
+            color: #888;
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+        }
+
+        /* 김밥 만드는 영역 */
+        .game-container {
+            width: 100%;
+            max-width: 600px;
+        }
+
+        /* 김 위의 밥 + 재료 */
+        .kimbap-mat {
+            background: #2d5a1b;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            min-height: 160px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+
+        .mat-label {
+            color: rgba(255,255,255,0.4);
+            font-size: 0.8rem;
+            position: absolute;
+            top: 0.8rem;
+            left: 1rem;
+        }
+
+        .nori {
+            background: #1a3a10;
+            border-radius: 8px;
+            width: 100%;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            position: relative;
+        }
+
+        .rice-layer {
+            background: #fff;
+            border-radius: 6px;
+            width: 100%;
+            min-height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+            padding: 0.8rem;
+        }
+
+        .ingredient-on-rice {
+            font-size: 1.8rem;
+            animation: plop 0.3s ease-out;
+            cursor: pointer;
+            transition: transform 0.15s;
+        }
+
+        .ingredient-on-rice:hover {
+            transform: scale(1.3);
+        }
+
+        @keyframes plop {
+            0% { transform: scale(0) translateY(-20px); opacity: 0; }
+            60% { transform: scale(1.2) translateY(0); }
+            100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
+
+        .empty-msg {
+            color: #ccc;
+            font-size: 0.9rem;
+        }
+
+        /* 재료 선택 */
+        .section-title {
+            font-size: 0.85rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 0.8rem;
+            font-weight: 600;
+        }
+
+        .ingredients {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 0.6rem;
+            margin-bottom: 2rem;
+        }
+
+        .ingredient-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.8rem 0.5rem;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            background: #fff;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+
+        .ingredient-btn:hover {
+            border-color: #ffb800;
+            background: #fffbf0;
+            transform: translateY(-2px);
+        }
+
+        .ingredient-btn:active {
+            transform: translateY(0) scale(0.95);
+        }
+
+        .ingredient-btn .emoji {
+            font-size: 1.8rem;
+        }
+
+        .ingredient-btn .name {
+            font-size: 0.75rem;
+            color: #666;
+        }
+
+        /* 액션 버튼들 */
+        .actions {
+            display: flex;
+            gap: 0.8rem;
+            margin-bottom: 2rem;
+        }
+
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-roll {
+            background: #ffb800;
+            color: #fff;
+            flex: 1;
+        }
+
+        .btn-roll:hover { background: #e5a600; transform: translateY(-1px); }
+        .btn-roll:disabled { background: #ddd; color: #aaa; cursor: not-allowed; transform: none; }
+
+        .btn-reset {
+            background: #f0f0f0;
+            color: #666;
+        }
+
+        .btn-reset:hover { background: #e5e5e5; }
+
+        /* 완성된 김밥 */
+        .result {
+            display: none;
+            text-align: center;
+            animation: fadeUp 0.5s ease-out;
+        }
+
+        .result.show { display: block; }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .kimbap-roll {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .result-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .result-desc {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+
+        .result-ingredients {
+            display: flex;
+            justify-content: center;
+            gap: 0.3rem;
+            flex-wrap: wrap;
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .score {
+            background: #fff8e0;
+            display: inline-block;
+            padding: 0.5rem 1.2rem;
+            border-radius: 20px;
+            font-weight: 700;
+            color: #b88600;
+            font-size: 0.9rem;
+        }
+
+        /* 김밥 컬렉션 */
+        .collection {
+            width: 100%;
+            max-width: 600px;
+            margin-top: 2rem;
+            border-top: 1px solid #eee;
+            padding-top: 1.5rem;
+        }
+
+        .collection-title {
+            font-size: 0.85rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .collection-list {
+            display: flex;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+        }
+
+        .collection-item {
+            background: #fff;
+            border: 1px solid #eee;
+            border-radius: 10px;
+            padding: 0.6rem 1rem;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .collection-item .mini-ingredients {
+            font-size: 1rem;
+        }
+
+        /* 말리는 애니메이션 */
+        .rolling {
+            animation: rollSpin 1s ease-in-out;
+        }
+
+        @keyframes rollSpin {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(0.8); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <a href="/" class="back-link">&larr; Home</a>
+
+    <h1>🍙 김밥 만들기</h1>
+    <p class="subtitle">재료를 골라서 나만의 김밥을 말아보세요!</p>
+
+    <div class="game-container">
+        <!-- 김밥 조립 영역 -->
+        <div class="kimbap-mat">
+            <span class="mat-label">김발</span>
+            <div class="nori">
+                <div class="rice-layer" id="riceLayer">
+                    <span class="empty-msg" id="emptyMsg">아래에서 재료를 골라주세요</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 재료 선택 -->
+        <p class="section-title">재료 선택 (최대 6개)</p>
+        <div class="ingredients" id="ingredients">
+            <button class="ingredient-btn" data-emoji="🥕" data-name="당근">
+                <span class="emoji">🥕</span>
+                <span class="name">당근</span>
+            </button>
+            <button class="ingredient-btn" data-emoji="🥒" data-name="오이">
+                <span class="emoji">🥒</span>
+                <span class="name">오이</span>
+            </button>
+            <button class="ingredient-btn" data-emoji="🥚" data-name="계란">
+                <span class="emoji">🥚</span>
+                <span class="name">계란</span>
+            </button>
+            <button class="ingredient-btn" data-emoji="🟫" data-name="우엉">
+                <span class="emoji">🟫</span>
+                <span class="name">우엉</span>
+            </button>
+            <button class="ingredient-btn" data-emoji="💛" data-name="단무지">
+                <span class="emoji">💛</span>
+                <span class="name">단무지</span>
+            </button>
+            <button class="ingredient-btn" data-emoji="🥩" data-name="소고기">
+                <span class="emoji">🥩</span>
+                <span class="name">소고기</span>
+            </button>
+            <button class="ingredient-btn" data-emoji="🦐" data-name="새우">
+                <span class="emoji">🦐</span>
+                <span class="name">새우</span>
+            </button>
+            <button class="ingredient-btn" data-emoji="🧀" data-name="치즈">
+                <span class="emoji">🧀</span>
+                <span class="name">치즈</span>
+            </button>
+            <button class="ingredient-btn" data-emoji="🌶️" data-name="김치">
+                <span class="emoji">🌶️</span>
+                <span class="name">김치</span>
+            </button>
+            <button class="ingredient-btn" data-emoji="🐟" data-name="참치">
+                <span class="emoji">🐟</span>
+                <span class="name">참치</span>
+            </button>
+            <button class="ingredient-btn" data-emoji="🥓" data-name="햄">
+                <span class="emoji">🥓</span>
+                <span class="name">햄</span>
+            </button>
+            <button class="ingredient-btn" data-emoji="🥬" data-name="시금치">
+                <span class="emoji">🥬</span>
+                <span class="name">시금치</span>
+            </button>
+        </div>
+
+        <!-- 버튼 -->
+        <div class="actions">
+            <button class="btn btn-roll" id="rollBtn" disabled>🍳 김밥 말기!</button>
+            <button class="btn btn-reset" id="resetBtn">다시 고르기</button>
+        </div>
+
+        <!-- 결과 -->
+        <div class="result" id="result">
+            <div class="kimbap-roll" id="kimbapRoll">🍙</div>
+            <p class="result-title" id="resultTitle"></p>
+            <p class="result-desc" id="resultDesc"></p>
+            <div class="result-ingredients" id="resultIngredients"></div>
+            <span class="score" id="resultScore"></span>
+        </div>
+    </div>
+
+    <!-- 컬렉션 -->
+    <div class="collection" id="collection" style="display:none;">
+        <p class="collection-title">내가 만든 김밥들</p>
+        <div class="collection-list" id="collectionList"></div>
+    </div>
+
+    <script>
+        const riceLayer = document.getElementById('riceLayer');
+        const emptyMsg = document.getElementById('emptyMsg');
+        const rollBtn = document.getElementById('rollBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const result = document.getElementById('result');
+        const kimbapRoll = document.getElementById('kimbapRoll');
+        const resultTitle = document.getElementById('resultTitle');
+        const resultDesc = document.getElementById('resultDesc');
+        const resultIngredients = document.getElementById('resultIngredients');
+        const resultScore = document.getElementById('resultScore');
+        const collection = document.getElementById('collection');
+        const collectionList = document.getElementById('collectionList');
+
+        let selected = [];
+        const MAX = 6;
+        let madeKimbaps = JSON.parse(localStorage.getItem('kimbaps') || '[]');
+
+        // 김밥 이름 생성
+        const names = {
+            classic: ['정통 김밥', '엄마표 김밥', '소풍 김밥', '추억의 김밥'],
+            fancy: ['프리미엄 김밥', '스페셜 김밥', '럭셔리 김밥', '시그니처 김밥'],
+            spicy: ['매콤 김밥', '불꽃 김밥', '화끈 김밥', '핫 김밥'],
+            cheese: ['치즈 폭탄 김밥', '고소한 김밥', '치즈왕 김밥'],
+            seafood: ['바다의 맛 김밥', '해물 김밥', '오션 김밥'],
+            simple: ['심플 김밥', '미니 김밥', '한입 김밥']
+        };
+
+        function getKimbapName(ingredients) {
+            const nameList = ingredients.map(i => i.name);
+            if (nameList.includes('김치') || nameList.includes('새우')) return names.spicy[Math.floor(Math.random() * names.spicy.length)];
+            if (nameList.includes('치즈')) return names.cheese[Math.floor(Math.random() * names.cheese.length)];
+            if (nameList.includes('참치') || nameList.includes('새우')) return names.seafood[Math.floor(Math.random() * names.seafood.length)];
+            if (nameList.includes('소고기')) return names.fancy[Math.floor(Math.random() * names.fancy.length)];
+            if (ingredients.length <= 2) return names.simple[Math.floor(Math.random() * names.simple.length)];
+            return names.classic[Math.floor(Math.random() * names.classic.length)];
+        }
+
+        function getScore(ingredients) {
+            let score = ingredients.length * 15;
+            const nameList = ingredients.map(i => i.name);
+            // 밸런스 보너스
+            const hasVeg = nameList.some(n => ['당근', '오이', '시금치'].includes(n));
+            const hasProtein = nameList.some(n => ['소고기', '새우', '참치', '햄', '계란'].includes(n));
+            if (hasVeg && hasProtein) score += 20;
+            // 클래식 조합 보너스
+            if (nameList.includes('당근') && nameList.includes('계란') && nameList.includes('단무지')) score += 15;
+            // 랜덤 보너스
+            score += Math.floor(Math.random() * 10);
+            return Math.min(100, score);
+        }
+
+        function getDescription(ingredients, score) {
+            if (score >= 90) return '완벽한 조합! 김밥 장인이시네요 👨‍🍳';
+            if (score >= 70) return '맛있겠다! 밸런스 좋은 김밥이에요 😋';
+            if (score >= 50) return '나쁘지 않아요! 취향 존중 김밥 👍';
+            return '독특한 조합이네요... 도전적인 맛! 🤔';
+        }
+
+        // 재료 추가
+        document.getElementById('ingredients').addEventListener('click', (e) => {
+            const btn = e.target.closest('.ingredient-btn');
+            if (!btn || selected.length >= MAX) return;
+
+            const emoji = btn.dataset.emoji;
+            const name = btn.dataset.name;
+            selected.push({ emoji, name });
+
+            emptyMsg.style.display = 'none';
+            const span = document.createElement('span');
+            span.className = 'ingredient-on-rice';
+            span.textContent = emoji;
+            span.title = name;
+            span.addEventListener('click', () => removeIngredient(span, name, emoji));
+            riceLayer.appendChild(span);
+
+            rollBtn.disabled = selected.length === 0;
+        });
+
+        // 재료 제거 (클릭으로)
+        function removeIngredient(el, name, emoji) {
+            const idx = selected.findIndex(s => s.name === name && s.emoji === emoji);
+            if (idx !== -1) selected.splice(idx, 1);
+            el.remove();
+            if (selected.length === 0) emptyMsg.style.display = '';
+            rollBtn.disabled = selected.length === 0;
+        }
+
+        // 다시 고르기
+        resetBtn.addEventListener('click', () => {
+            selected = [];
+            riceLayer.querySelectorAll('.ingredient-on-rice').forEach(el => el.remove());
+            emptyMsg.style.display = '';
+            rollBtn.disabled = true;
+            result.classList.remove('show');
+        });
+
+        // 김밥 말기
+        rollBtn.addEventListener('click', () => {
+            if (selected.length === 0) return;
+
+            // 말리는 애니메이션
+            const mat = document.querySelector('.kimbap-mat');
+            mat.classList.add('rolling');
+            setTimeout(() => mat.classList.remove('rolling'), 1000);
+
+            setTimeout(() => {
+                const name = getKimbapName(selected);
+                const score = getScore(selected);
+                const desc = getDescription(selected, score);
+
+                resultTitle.textContent = name;
+                resultDesc.textContent = desc;
+                resultIngredients.textContent = selected.map(s => s.emoji).join(' ');
+                resultScore.textContent = `맛 점수: ${score}점`;
+                result.classList.add('show');
+
+                // 컬렉션에 추가
+                const kimbap = { name, ingredients: [...selected], score, date: new Date().toLocaleDateString('ko-KR') };
+                madeKimbaps.unshift(kimbap);
+                if (madeKimbaps.length > 10) madeKimbaps.pop();
+                localStorage.setItem('kimbaps', JSON.stringify(madeKimbaps));
+                renderCollection();
+            }, 800);
+        });
+
+        // 컬렉션 렌더링
+        function renderCollection() {
+            if (madeKimbaps.length === 0) { collection.style.display = 'none'; return; }
+            collection.style.display = '';
+            collectionList.innerHTML = madeKimbaps.map(k =>
+                `<div class="collection-item">
+                    <span class="mini-ingredients">${k.ingredients.map(i => i.emoji).join('')}</span>
+                    <span>${k.name} (${k.score}점)</span>
+                </div>`
+            ).join('');
+        }
+        renderCollection();
+    </script>
+</body>
+</html>
