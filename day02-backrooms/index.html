@@ -9,9 +9,11 @@
 
         body {
             overflow: hidden;
-            background: #2a2a1a;
+            background: #0a0a00;
             min-height: 100vh;
-            cursor: default;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .back-link {
@@ -28,387 +30,292 @@
 
         .back-link:hover { color: rgba(200, 180, 100, 0.8); }
 
-        canvas {
-            display: block;
+        .scene {
+            position: relative;
             width: 100vw;
             height: 100vh;
+            overflow: hidden;
         }
 
+        .backrooms-img {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            min-width: 110%;
+            min-height: 110%;
+            object-fit: cover;
+            transform: translate(-50%, -50%);
+            transition: transform 0.3s ease-out;
+        }
+
+        /* 형광등 깜빡임 오버레이 */
+        .light-flicker {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 5;
+            background: rgba(180, 170, 80, 0);
+            animation: lightFlicker 8s ease-in-out infinite;
+        }
+
+        @keyframes lightFlicker {
+            0%, 100% { background: rgba(180, 170, 80, 0); }
+            4% { background: rgba(0, 0, 0, 0.15); }
+            4.5% { background: rgba(180, 170, 80, 0.03); }
+            5% { background: rgba(0, 0, 0, 0.1); }
+            5.5% { background: rgba(180, 170, 80, 0); }
+            50% { background: rgba(180, 170, 80, 0); }
+            50.5% { background: rgba(0, 0, 0, 0.08); }
+            51% { background: rgba(180, 170, 80, 0.02); }
+            51.5% { background: rgba(180, 170, 80, 0); }
+        }
+
+        /* 순간 정전 효과 */
+        .blackout {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 6;
+            background: rgba(0, 0, 0, 0);
+            transition: background 0.05s;
+        }
+
+        .blackout.active {
+            background: rgba(0, 0, 0, 0.7);
+        }
+
+        /* 비네팅 */
         .vignette {
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
             pointer-events: none;
-            background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.7) 100%);
+            background: radial-gradient(ellipse at center, transparent 30%, rgba(0, 0, 0, 0.6) 100%);
             z-index: 10;
         }
 
+        /* 노이즈 그레인 */
         .noise {
             position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
             pointer-events: none;
-            opacity: 0.03;
             z-index: 11;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            opacity: 0.04;
+            animation: noiseMove 0.5s steps(5) infinite;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
         }
 
-        .flicker {
+        @keyframes noiseMove {
+            0% { transform: translate(0, 0); }
+            20% { transform: translate(-5%, 5%); }
+            40% { transform: translate(5%, -5%); }
+            60% { transform: translate(-3%, -3%); }
+            80% { transform: translate(3%, 3%); }
+            100% { transform: translate(0, 0); }
+        }
+
+        /* 스캔라인 */
+        .scanlines {
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
             pointer-events: none;
             z-index: 12;
-            animation: flicker 0.1s infinite;
-            background: rgba(255, 240, 150, 0);
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 0, 0, 0.015) 2px,
+                rgba(0, 0, 0, 0.015) 4px
+            );
         }
 
-        @keyframes flicker {
-            0%, 90%, 100% { background: rgba(255, 240, 150, 0); }
-            92% { background: rgba(255, 240, 150, 0.02); }
-            94% { background: rgba(0, 0, 0, 0.03); }
+        /* 먼지 파티클 캔버스 */
+        #dustCanvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 8;
         }
+
+        /* 앰비언트 텍스트 - 간헐적으로 나타남 */
+        .whisper {
+            position: fixed;
+            font-family: 'Courier New', monospace;
+            color: rgba(180, 170, 80, 0);
+            font-size: 0.8rem;
+            pointer-events: none;
+            z-index: 15;
+            transition: color 3s ease-in-out;
+            letter-spacing: 0.2em;
+        }
+
+        .whisper.visible {
+            color: rgba(180, 170, 80, 0.25);
+        }
+
+        .whisper-1 { bottom: 3rem; left: 3rem; }
+        .whisper-2 { top: 3rem; right: 3rem; }
 
         .info {
             position: fixed;
             bottom: 1.5rem;
             right: 1.5rem;
-            color: rgba(200, 180, 100, 0.3);
+            color: rgba(200, 180, 100, 0.25);
             font-family: monospace;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             z-index: 200;
         }
     </style>
 </head>
 <body>
     <a href="/" class="back-link">&larr; Home</a>
-    <canvas id="canvas"></canvas>
+
+    <div class="scene">
+        <img src="backrooms.png" alt="The Backrooms" class="backrooms-img" id="bgImage">
+    </div>
+
+    <div class="light-flicker"></div>
+    <div class="blackout" id="blackout"></div>
     <div class="vignette"></div>
     <div class="noise"></div>
-    <div class="flicker"></div>
-    <div class="info">drag to look around / click to regenerate</div>
+    <div class="scanlines"></div>
+    <canvas id="dustCanvas"></canvas>
+
+    <div class="whisper whisper-1" id="whisper1">if you're not careful you'll end up here</div>
+    <div class="whisper whisper-2" id="whisper2">level 0</div>
+
+    <div class="info">drag to look around</div>
 
     <script>
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
+        const bgImage = document.getElementById('bgImage');
+        const blackout = document.getElementById('blackout');
+        const dustCanvas = document.getElementById('dustCanvas');
+        const ctx = dustCanvas.getContext('2d');
+        const whisper1 = document.getElementById('whisper1');
+        const whisper2 = document.getElementById('whisper2');
+
         let W, H;
-        let mouseX = 0.5, mouseY = 0.5;
-        let time = 0;
-        let seed = Math.random() * 10000;
-        let rooms = [];
+        let offsetX = 0, offsetY = 0;
+        let isDragging = false;
+        let lastMouseX = 0, lastMouseY = 0;
 
         function resize() {
-            W = canvas.width = window.innerWidth;
-            H = canvas.height = window.innerHeight;
-            generate();
+            W = dustCanvas.width = window.innerWidth;
+            H = dustCanvas.height = window.innerHeight;
         }
+        window.addEventListener('resize', resize);
+        resize();
 
-        // 시드 기반 의사 난수
-        function seededRandom(s) {
-            const x = Math.sin(s * 9301 + 49297) * 49297;
-            return x - Math.floor(x);
-        }
+        // 드래그로 시점 이동
+        document.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            lastMouseX = e.clientX;
+            lastMouseY = e.clientY;
+        });
 
-        // 방 하나 생성
-        function createRoom(depth, offsetX, offsetY) {
-            const s = seededRandom(seed + depth * 7.3 + offsetX * 3.1);
-            const hasDoor = s > 0.3;
-            const doorSide = s > 0.6 ? 'right' : 'left';
-            const lightFlicker = seededRandom(seed + depth * 13.7) > 0.7;
-            const lightBroken = seededRandom(seed + depth * 17.1) > 0.85;
-            return { depth, offsetX, offsetY, hasDoor, doorSide, lightFlicker, lightBroken };
-        }
+        document.addEventListener('mouseup', () => { isDragging = false; });
 
-        function generate() {
-            rooms = [];
-            const numRooms = 12;
-            for (let i = 0; i < numRooms; i++) {
-                const ox = seededRandom(seed + i * 5.3) * 0.4 - 0.2;
-                const oy = seededRandom(seed + i * 8.7) * 0.1 - 0.05;
-                rooms.push(createRoom(i, ox, oy));
-            }
-        }
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            const dx = (e.clientX - lastMouseX) * 0.15;
+            const dy = (e.clientY - lastMouseY) * 0.15;
+            offsetX = Math.max(-60, Math.min(60, offsetX + dx));
+            offsetY = Math.max(-30, Math.min(30, offsetY + dy));
+            lastMouseX = e.clientX;
+            lastMouseY = e.clientY;
+            bgImage.style.transform = `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`;
+        });
 
-        // 원근 투영
-        function project(x, y, z) {
-            const fov = 300;
-            const scale = fov / (fov + z);
-            const px = W / 2 + (x - W / 2 + (mouseX - 0.5) * 100) * scale;
-            const py = H / 2 + (y - H / 2 + (mouseY - 0.5) * 50) * scale;
-            return { x: px, y: py, scale };
-        }
+        // 터치 지원
+        document.addEventListener('touchstart', (e) => {
+            isDragging = true;
+            lastMouseX = e.touches[0].clientX;
+            lastMouseY = e.touches[0].clientY;
+        });
+        document.addEventListener('touchend', () => { isDragging = false; });
+        document.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            const dx = (e.touches[0].clientX - lastMouseX) * 0.15;
+            const dy = (e.touches[0].clientY - lastMouseY) * 0.15;
+            offsetX = Math.max(-60, Math.min(60, offsetX + dx));
+            offsetY = Math.max(-30, Math.min(30, offsetY + dy));
+            lastMouseX = e.touches[0].clientX;
+            lastMouseY = e.touches[0].clientY;
+            bgImage.style.transform = `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`;
+        });
 
-        function drawRoom(room, t) {
-            const z = room.depth * 200 - (t * 20) % 200;
-            if (z < -100 || z > 2400) return;
-
-            const fade = Math.max(0, 1 - z / 2400);
-            const roomW = W * 0.8;
-            const roomH = H * 0.8;
-            const cx = W / 2 + room.offsetX * W;
-            const cy = H / 2 + room.offsetY * H;
-
-            // 4개 코너
-            const tl = project(cx - roomW / 2, cy - roomH / 2, z);
-            const tr = project(cx + roomW / 2, cy - roomH / 2, z);
-            const bl = project(cx - roomW / 2, cy + roomH / 2, z);
-            const br = project(cx + roomW / 2, cy + roomH / 2, z);
-
-            // 뒷벽 (노란 벽지)
-            const nextZ = z + 200;
-            const ntl = project(cx - roomW / 2, cy - roomH / 2, nextZ);
-            const ntr = project(cx + roomW / 2, cy - roomH / 2, nextZ);
-            const nbl = project(cx - roomW / 2, cy + roomH / 2, nextZ);
-            const nbr = project(cx + roomW / 2, cy + roomH / 2, nextZ);
-
-            // 형광등 깜빡임
-            let lightIntensity = fade;
-            if (room.lightBroken) {
-                lightIntensity *= 0.1;
-            } else if (room.lightFlicker) {
-                lightIntensity *= 0.5 + 0.5 * Math.sin(t * 10 + room.depth * 3);
-            }
-
-            // 벽지 색상 (노란빛)
-            const wallR = Math.floor(180 * lightIntensity);
-            const wallG = Math.floor(160 * lightIntensity);
-            const wallB = Math.floor(80 * lightIntensity);
-            const wallColor = `rgb(${wallR}, ${wallG}, ${wallB})`;
-
-            // 바닥 색상 (갈색 카펫)
-            const floorR = Math.floor(100 * lightIntensity);
-            const floorG = Math.floor(80 * lightIntensity);
-            const floorB = Math.floor(50 * lightIntensity);
-            const floorColor = `rgb(${floorR}, ${floorG}, ${floorB})`;
-
-            // 천장
-            const ceilR = Math.floor(150 * lightIntensity);
-            const ceilG = Math.floor(140 * lightIntensity);
-            const ceilB = Math.floor(100 * lightIntensity);
-            const ceilColor = `rgb(${ceilR}, ${ceilG}, ${ceilB})`;
-
-            // 뒷벽 그리기
-            ctx.fillStyle = wallColor;
-            ctx.beginPath();
-            ctx.moveTo(ntl.x, ntl.y);
-            ctx.lineTo(ntr.x, ntr.y);
-            ctx.lineTo(nbr.x, nbr.y);
-            ctx.lineTo(nbl.x, nbl.y);
-            ctx.closePath();
-            ctx.fill();
-
-            // 벽지 패턴 (세로 줄)
-            ctx.strokeStyle = `rgba(${wallR + 20}, ${wallG + 10}, ${wallB}, ${0.3 * fade})`;
-            ctx.lineWidth = 1;
-            const stripes = 8;
-            for (let i = 1; i < stripes; i++) {
-                const ratio = i / stripes;
-                const sx = ntl.x + (ntr.x - ntl.x) * ratio;
-                const sy = ntl.y + (ntr.y - ntl.y) * ratio;
-                const ex = nbl.x + (nbr.x - nbl.x) * ratio;
-                const ey = nbl.y + (nbr.y - nbl.y) * ratio;
-                ctx.beginPath();
-                ctx.moveTo(sx, sy);
-                ctx.lineTo(ex, ey);
-                ctx.stroke();
-            }
-
-            // 바닥
-            ctx.fillStyle = floorColor;
-            ctx.beginPath();
-            ctx.moveTo(bl.x, bl.y);
-            ctx.lineTo(br.x, br.y);
-            ctx.lineTo(nbr.x, nbr.y);
-            ctx.lineTo(nbl.x, nbl.y);
-            ctx.closePath();
-            ctx.fill();
-
-            // 카펫 패턴
-            ctx.strokeStyle = `rgba(${floorR + 30}, ${floorG + 20}, ${floorB + 10}, ${0.2 * fade})`;
-            for (let i = 1; i < 6; i++) {
-                const ratio = i / 6;
-                const sx = bl.x + (nbl.x - bl.x) * ratio;
-                const sy = bl.y + (nbl.y - bl.y) * ratio;
-                const ex = br.x + (nbr.x - br.x) * ratio;
-                const ey = br.y + (nbr.y - br.y) * ratio;
-                ctx.beginPath();
-                ctx.moveTo(sx, sy);
-                ctx.lineTo(ex, ey);
-                ctx.stroke();
-            }
-
-            // 천장
-            ctx.fillStyle = ceilColor;
-            ctx.beginPath();
-            ctx.moveTo(tl.x, tl.y);
-            ctx.lineTo(tr.x, tr.y);
-            ctx.lineTo(ntr.x, ntr.y);
-            ctx.lineTo(ntl.x, ntl.y);
-            ctx.closePath();
-            ctx.fill();
-
-            // 천장 타일 그리드
-            ctx.strokeStyle = `rgba(${ceilR - 20}, ${ceilG - 20}, ${ceilB - 20}, ${0.3 * fade})`;
-            for (let i = 1; i < 5; i++) {
-                const ratio = i / 5;
-                const sx = tl.x + (ntl.x - tl.x) * ratio;
-                const sy = tl.y + (ntl.y - tl.y) * ratio;
-                const ex = tr.x + (ntr.x - tr.x) * ratio;
-                const ey = tr.y + (ntr.y - tr.y) * ratio;
-                ctx.beginPath();
-                ctx.moveTo(sx, sy);
-                ctx.lineTo(ex, ey);
-                ctx.stroke();
-            }
-
-            // 왼쪽 벽
-            ctx.fillStyle = `rgb(${Math.floor(wallR * 0.7)}, ${Math.floor(wallG * 0.7)}, ${Math.floor(wallB * 0.7)})`;
-            ctx.beginPath();
-            ctx.moveTo(tl.x, tl.y);
-            ctx.lineTo(ntl.x, ntl.y);
-            ctx.lineTo(nbl.x, nbl.y);
-            ctx.lineTo(bl.x, bl.y);
-            ctx.closePath();
-            ctx.fill();
-
-            // 오른쪽 벽
-            ctx.fillStyle = `rgb(${Math.floor(wallR * 0.8)}, ${Math.floor(wallG * 0.8)}, ${Math.floor(wallB * 0.8)})`;
-            ctx.beginPath();
-            ctx.moveTo(tr.x, tr.y);
-            ctx.lineTo(ntr.x, ntr.y);
-            ctx.lineTo(nbr.x, nbr.y);
-            ctx.lineTo(br.x, br.y);
-            ctx.closePath();
-            ctx.fill();
-
-            // 형광등
-            if (!room.lightBroken) {
-                const lightY = ntl.y + (nbl.y - ntl.y) * 0.02;
-                const lightX1 = ntl.x + (ntr.x - ntl.x) * 0.3;
-                const lightX2 = ntl.x + (ntr.x - ntl.x) * 0.7;
-                const lightAlpha = lightIntensity * (room.lightFlicker ? (0.5 + 0.5 * Math.sin(t * 15 + room.depth * 5)) : 1);
-
-                ctx.shadowColor = `rgba(255, 250, 200, ${lightAlpha})`;
-                ctx.shadowBlur = 20;
-                ctx.strokeStyle = `rgba(255, 255, 240, ${lightAlpha})`;
-                ctx.lineWidth = 2 * fade;
-                ctx.beginPath();
-                ctx.moveTo(lightX1, lightY);
-                ctx.lineTo(lightX2, lightY);
-                ctx.stroke();
-                ctx.shadowBlur = 0;
-
-                // 형광등 글로우
-                const grd = ctx.createRadialGradient(
-                    (lightX1 + lightX2) / 2, lightY, 0,
-                    (lightX1 + lightX2) / 2, lightY, 60 * fade
-                );
-                grd.addColorStop(0, `rgba(255, 250, 200, ${0.1 * lightAlpha})`);
-                grd.addColorStop(1, 'rgba(255, 250, 200, 0)');
-                ctx.fillStyle = grd;
-                ctx.fillRect(lightX1 - 30, lightY - 30, lightX2 - lightX1 + 60, 80);
-            }
-
-            // 문 (어둠 속으로)
-            if (room.hasDoor && z < 1800) {
-                const doorW = (ntr.x - ntl.x) * 0.15;
-                const doorH = (nbl.y - ntl.y) * 0.6;
-                let doorX;
-                if (room.doorSide === 'right') {
-                    doorX = ntl.x + (ntr.x - ntl.x) * 0.7;
-                } else {
-                    doorX = ntl.x + (ntr.x - ntl.x) * 0.15;
-                }
-                const doorY = nbl.y - doorH;
-
-                // 어두운 문
-                ctx.fillStyle = `rgba(5, 5, 0, ${fade * 0.9})`;
-                ctx.fillRect(doorX, doorY, doorW, doorH);
-
-                // 문틀
-                ctx.strokeStyle = `rgba(${wallR + 30}, ${wallG + 20}, ${wallB}, ${fade * 0.5})`;
-                ctx.lineWidth = 1;
-                ctx.strokeRect(doorX, doorY, doorW, doorH);
-            }
-        }
-
-        // 앰비언트 파티클 (먼지)
-        const particles = [];
-        for (let i = 0; i < 60; i++) {
-            particles.push({
-                x: Math.random() * 2 - 1,
-                y: Math.random() * 2 - 1,
-                z: Math.random() * 2000,
-                speed: 0.2 + Math.random() * 0.5,
-                size: 0.5 + Math.random() * 1.5
+        // 먼지 파티클
+        const dusts = [];
+        for (let i = 0; i < 40; i++) {
+            dusts.push({
+                x: Math.random() * W,
+                y: Math.random() * H,
+                size: 0.5 + Math.random() * 2,
+                speedX: (Math.random() - 0.5) * 0.3,
+                speedY: -0.1 - Math.random() * 0.3,
+                opacity: 0.1 + Math.random() * 0.3
             });
         }
 
-        function drawParticles(t) {
-            particles.forEach(p => {
-                p.z -= p.speed;
-                p.y += Math.sin(t + p.x * 10) * 0.001;
-                if (p.z < 0) p.z = 2000;
+        function drawDust(time) {
+            ctx.clearRect(0, 0, W, H);
+            dusts.forEach(d => {
+                d.x += d.speedX + Math.sin(time * 0.001 + d.y * 0.01) * 0.2;
+                d.y += d.speedY;
+                if (d.y < -10) { d.y = H + 10; d.x = Math.random() * W; }
+                if (d.x < -10) d.x = W + 10;
+                if (d.x > W + 10) d.x = -10;
 
-                const proj = project(W / 2 + p.x * W * 0.5, H / 2 + p.y * H * 0.3, p.z);
-                const alpha = Math.max(0, (1 - p.z / 2000) * 0.4);
-                const size = p.size * proj.scale;
-
-                ctx.fillStyle = `rgba(200, 180, 120, ${alpha})`;
+                ctx.fillStyle = `rgba(200, 190, 130, ${d.opacity})`;
                 ctx.beginPath();
-                ctx.arc(proj.x, proj.y, size, 0, Math.PI * 2);
+                ctx.arc(d.x, d.y, d.size, 0, Math.PI * 2);
                 ctx.fill();
             });
         }
 
-        function draw() {
-            time += 0.016;
-
-            // 배경
-            ctx.fillStyle = '#1a1a0e';
-            ctx.fillRect(0, 0, W, H);
-
-            // 방들 (먼 것부터)
-            const sorted = [...rooms].sort((a, b) => b.depth - a.depth);
-            sorted.forEach(room => drawRoom(room, time));
-
-            // 먼지 파티클
-            drawParticles(time);
-
-            // 가끔 전체 깜빡임
-            if (Math.random() > 0.995) {
-                ctx.fillStyle = `rgba(0, 0, 0, ${0.3 + Math.random() * 0.4})`;
-                ctx.fillRect(0, 0, W, H);
-            }
-
-            requestAnimationFrame(draw);
+        // 랜덤 정전 효과
+        function randomBlackout() {
+            const next = 5000 + Math.random() * 15000;
+            setTimeout(() => {
+                blackout.classList.add('active');
+                setTimeout(() => {
+                    blackout.classList.remove('active');
+                    // 가끔 이중 깜빡임
+                    if (Math.random() > 0.5) {
+                        setTimeout(() => {
+                            blackout.classList.add('active');
+                            setTimeout(() => blackout.classList.remove('active'), 50);
+                        }, 100);
+                    }
+                }, 50 + Math.random() * 100);
+                randomBlackout();
+            }, next);
         }
+        randomBlackout();
 
-        // 이벤트 — 드래그할 때만 시점 이동
-        let isDragging = false;
-        document.addEventListener('mousedown', (e) => {
-            if (e.button === 0) isDragging = true;
-        });
-        document.addEventListener('mouseup', () => {
-            isDragging = false;
-        });
-        document.addEventListener('mousemove', (e) => {
-            if (isDragging) {
-                mouseX += e.movementX * 0.002;
-                mouseY += e.movementY * 0.002;
-                mouseX = Math.max(0, Math.min(1, mouseX));
-                mouseY = Math.max(0, Math.min(1, mouseY));
-            }
-        });
+        // 위스퍼 텍스트 간헐적 표시
+        function randomWhisper() {
+            const next = 8000 + Math.random() * 20000;
+            setTimeout(() => {
+                const el = Math.random() > 0.5 ? whisper1 : whisper2;
+                el.classList.add('visible');
+                setTimeout(() => el.classList.remove('visible'), 4000 + Math.random() * 3000);
+                randomWhisper();
+            }, next);
+        }
+        randomWhisper();
 
-        document.addEventListener('click', () => {
-            seed = Math.random() * 10000;
-            generate();
-        });
-
-        window.addEventListener('resize', resize);
-        resize();
-        draw();
+        // 메인 루프
+        function animate(time) {
+            drawDust(time);
+            requestAnimationFrame(animate);
+        }
+        animate(0);
     </script>
 </body>
 </html>
