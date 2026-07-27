@@ -223,6 +223,32 @@
             box-shadow: 0 8px 30px rgba(0,0,0,0.15);
         }
 
+        .reveal-container {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+
+        .reveal-container .reveal-img {
+            margin-bottom: 0;
+        }
+
+        .kimbap-canvas {
+            position: absolute;
+            bottom: 15%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 120px;
+            animation: kimbapFloat 0.8s ease-out 0.3s both;
+        }
+
+        @keyframes kimbapFloat {
+            0% { opacity: 0; transform: translateX(-50%) translateY(30px) scale(0.5); }
+            60% { opacity: 1; transform: translateX(-50%) translateY(-5px) scale(1.05); }
+            100% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+        }
+
         @keyframes revealPop {
             0% { transform: scale(0.3) rotate(-10deg); opacity: 0; }
             60% { transform: scale(1.1) rotate(2deg); opacity: 1; }
@@ -349,9 +375,9 @@
                 <span class="emoji">🍦</span>
                 <span class="name">생크림</span>
             </button>
-            <button class="ingredient-btn" data-emoji="🐟" data-name="황태">
-                <span class="emoji">🐟</span>
-                <span class="name">황태</span>
+            <button class="ingredient-btn" data-emoji="🍣" data-name="연어">
+                <span class="emoji">🍣</span>
+                <span class="name">연어</span>
             </button>
             <button class="ingredient-btn" data-emoji="🍇" data-name="샤인머스캣">
                 <span class="emoji">🍇</span>
@@ -387,8 +413,10 @@
 
         <!-- 결과 -->
         <div class="result" id="result">
-            <img src="reveal.jpeg" alt="김밥 공개!" class="reveal-img">
-            <div class="kimbap-roll" id="kimbapRoll">🍙</div>
+            <div class="reveal-container">
+                <img src="reveal.jpeg" alt="김밥 공개!" class="reveal-img">
+                <canvas id="kimbapCanvas" width="160" height="160" class="kimbap-canvas"></canvas>
+            </div>
             <p class="result-title" id="resultTitle"></p>
             <p class="result-desc" id="resultDesc"></p>
             <div class="result-ingredients" id="resultIngredients"></div>
@@ -434,7 +462,7 @@
             if (fruitCount >= 2) score += 15;
             // 달콤 + 짭짤 조합 보너스
             const sweet = nameList.some(n => [...fruits, '생크림'].includes(n));
-            const savory = nameList.some(n => ['황태', '햄', '참치', '와사비'].includes(n));
+            const savory = nameList.some(n => ['연어', '햄', '참치', '와사비'].includes(n));
             if (sweet && savory) score += 20;
             // 랜덤 보너스
             score += Math.floor(Math.random() * 10);
