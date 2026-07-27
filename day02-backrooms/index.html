@@ -11,7 +11,7 @@
             overflow: hidden;
             background: #2a2a1a;
             min-height: 100vh;
-            cursor: none;
+            cursor: default;
         }
 
         .back-link {
@@ -384,10 +384,21 @@
             requestAnimationFrame(draw);
         }
 
-        // 이벤트
+        // 이벤트 — 드래그할 때만 시점 이동
+        let isDragging = false;
+        document.addEventListener('mousedown', (e) => {
+            if (e.button === 0) isDragging = true;
+        });
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
         document.addEventListener('mousemove', (e) => {
-            mouseX = e.clientX / W;
-            mouseY = e.clientY / H;
+            if (isDragging) {
+                mouseX += e.movementX * 0.002;
+                mouseY += e.movementY * 0.002;
+                mouseX = Math.max(0, Math.min(1, mouseX));
+                mouseY = Math.max(0, Math.min(1, mouseY));
+            }
         });
 
         document.addEventListener('click', () => {
