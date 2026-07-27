@@ -320,55 +320,47 @@
         </div>
 
         <!-- 재료 선택 -->
-        <p class="section-title">재료 선택 (최대 6개)</p>
+        <p class="section-title">재료 선택 (최대 3개)</p>
         <div class="ingredients" id="ingredients">
-            <button class="ingredient-btn" data-emoji="🥕" data-name="당근">
-                <span class="emoji">🥕</span>
-                <span class="name">당근</span>
+            <button class="ingredient-btn" data-emoji="🫐" data-name="블루베리">
+                <span class="emoji">🫐</span>
+                <span class="name">블루베리</span>
             </button>
-            <button class="ingredient-btn" data-emoji="🥒" data-name="오이">
-                <span class="emoji">🥒</span>
-                <span class="name">오이</span>
+            <button class="ingredient-btn" data-emoji="🍓" data-name="딸기">
+                <span class="emoji">🍓</span>
+                <span class="name">딸기</span>
             </button>
-            <button class="ingredient-btn" data-emoji="🥚" data-name="계란">
-                <span class="emoji">🥚</span>
-                <span class="name">계란</span>
+            <button class="ingredient-btn" data-emoji="🍦" data-name="생크림">
+                <span class="emoji">🍦</span>
+                <span class="name">생크림</span>
             </button>
-            <button class="ingredient-btn" data-emoji="🟫" data-name="우엉">
-                <span class="emoji">🟫</span>
-                <span class="name">우엉</span>
-            </button>
-            <button class="ingredient-btn" data-emoji="💛" data-name="단무지">
-                <span class="emoji">💛</span>
-                <span class="name">단무지</span>
-            </button>
-            <button class="ingredient-btn" data-emoji="🥩" data-name="소고기">
-                <span class="emoji">🥩</span>
-                <span class="name">소고기</span>
-            </button>
-            <button class="ingredient-btn" data-emoji="🦐" data-name="새우">
-                <span class="emoji">🦐</span>
-                <span class="name">새우</span>
-            </button>
-            <button class="ingredient-btn" data-emoji="🧀" data-name="치즈">
-                <span class="emoji">🧀</span>
-                <span class="name">치즈</span>
-            </button>
-            <button class="ingredient-btn" data-emoji="🌶️" data-name="김치">
-                <span class="emoji">🌶️</span>
-                <span class="name">김치</span>
-            </button>
-            <button class="ingredient-btn" data-emoji="🐟" data-name="참치">
+            <button class="ingredient-btn" data-emoji="🐟" data-name="황태">
                 <span class="emoji">🐟</span>
-                <span class="name">참치</span>
+                <span class="name">황태</span>
+            </button>
+            <button class="ingredient-btn" data-emoji="🍇" data-name="샤인머스캣">
+                <span class="emoji">🍇</span>
+                <span class="name">샤인머스캣</span>
+            </button>
+            <button class="ingredient-btn" data-emoji="🟢" data-name="와사비">
+                <span class="emoji">🟢</span>
+                <span class="name">와사비</span>
+            </button>
+            <button class="ingredient-btn" data-emoji="🍍" data-name="파인애플">
+                <span class="emoji">🍍</span>
+                <span class="name">파인애플</span>
             </button>
             <button class="ingredient-btn" data-emoji="🥓" data-name="햄">
                 <span class="emoji">🥓</span>
                 <span class="name">햄</span>
             </button>
-            <button class="ingredient-btn" data-emoji="🥬" data-name="시금치">
-                <span class="emoji">🥬</span>
-                <span class="name">시금치</span>
+            <button class="ingredient-btn" data-emoji="🥝" data-name="키위">
+                <span class="emoji">🥝</span>
+                <span class="name">키위</span>
+            </button>
+            <button class="ingredient-btn" data-emoji="🐠" data-name="참치">
+                <span class="emoji">🐠</span>
+                <span class="name">참치</span>
             </button>
         </div>
 
@@ -409,48 +401,35 @@
         const collectionList = document.getElementById('collectionList');
 
         let selected = [];
-        const MAX = 6;
+        const MAX = 3;
         let madeKimbaps = JSON.parse(localStorage.getItem('kimbaps') || '[]');
 
-        // 김밥 이름 생성
-        const names = {
-            classic: ['정통 김밥', '엄마표 김밥', '소풍 김밥', '추억의 김밥'],
-            fancy: ['프리미엄 김밥', '스페셜 김밥', '럭셔리 김밥', '시그니처 김밥'],
-            spicy: ['매콤 김밥', '불꽃 김밥', '화끈 김밥', '핫 김밥'],
-            cheese: ['치즈 폭탄 김밥', '고소한 김밥', '치즈왕 김밥'],
-            seafood: ['바다의 맛 김밥', '해물 김밥', '오션 김밥'],
-            simple: ['심플 김밥', '미니 김밥', '한입 김밥']
-        };
-
+        // 김밥 이름: 선택한 순서대로 이름 짓기
         function getKimbapName(ingredients) {
-            const nameList = ingredients.map(i => i.name);
-            if (nameList.includes('김치') || nameList.includes('새우')) return names.spicy[Math.floor(Math.random() * names.spicy.length)];
-            if (nameList.includes('치즈')) return names.cheese[Math.floor(Math.random() * names.cheese.length)];
-            if (nameList.includes('참치') || nameList.includes('새우')) return names.seafood[Math.floor(Math.random() * names.seafood.length)];
-            if (nameList.includes('소고기')) return names.fancy[Math.floor(Math.random() * names.fancy.length)];
-            if (ingredients.length <= 2) return names.simple[Math.floor(Math.random() * names.simple.length)];
-            return names.classic[Math.floor(Math.random() * names.classic.length)];
+            return ingredients.map(i => i.name).join(' ') + ' 김밥';
         }
 
         function getScore(ingredients) {
-            let score = ingredients.length * 15;
+            let score = ingredients.length * 25;
             const nameList = ingredients.map(i => i.name);
-            // 밸런스 보너스
-            const hasVeg = nameList.some(n => ['당근', '오이', '시금치'].includes(n));
-            const hasProtein = nameList.some(n => ['소고기', '새우', '참치', '햄', '계란'].includes(n));
-            if (hasVeg && hasProtein) score += 20;
-            // 클래식 조합 보너스
-            if (nameList.includes('당근') && nameList.includes('계란') && nameList.includes('단무지')) score += 15;
+            // 과일 조합 보너스
+            const fruits = ['블루베리', '딸기', '샤인머스캣', '파인애플', '키위'];
+            const fruitCount = nameList.filter(n => fruits.includes(n)).length;
+            if (fruitCount >= 2) score += 15;
+            // 달콤 + 짭짤 조합 보너스
+            const sweet = nameList.some(n => [...fruits, '생크림'].includes(n));
+            const savory = nameList.some(n => ['황태', '햄', '참치', '와사비'].includes(n));
+            if (sweet && savory) score += 20;
             // 랜덤 보너스
             score += Math.floor(Math.random() * 10);
             return Math.min(100, score);
         }
 
         function getDescription(ingredients, score) {
-            if (score >= 90) return '완벽한 조합! 김밥 장인이시네요 👨‍🍳';
-            if (score >= 70) return '맛있겠다! 밸런스 좋은 김밥이에요 😋';
-            if (score >= 50) return '나쁘지 않아요! 취향 존중 김밥 👍';
-            return '독특한 조합이네요... 도전적인 맛! 🤔';
+            if (score >= 90) return '천재적인 조합! 김밥계의 혁명 👨‍🍳';
+            if (score >= 70) return '의외로 맛있을 것 같은 조합이에요 😋';
+            if (score >= 50) return '호불호가 갈리겠지만... 도전 정신 좋아요 👍';
+            return '이건 좀... 용기 있는 선택이네요 🤔';
         }
 
         // 재료 추가
