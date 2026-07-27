@@ -214,6 +214,21 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        .reveal-img {
+            width: 250px;
+            max-width: 80%;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            animation: revealPop 0.6s ease-out;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+        }
+
+        @keyframes revealPop {
+            0% { transform: scale(0.3) rotate(-10deg); opacity: 0; }
+            60% { transform: scale(1.1) rotate(2deg); opacity: 1; }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+
         .kimbap-roll {
             font-size: 4rem;
             margin-bottom: 1rem;
@@ -372,6 +387,7 @@
 
         <!-- 결과 -->
         <div class="result" id="result">
+            <img src="reveal.jpeg" alt="김밥 공개!" class="reveal-img">
             <div class="kimbap-roll" id="kimbapRoll">🍙</div>
             <p class="result-title" id="resultTitle"></p>
             <p class="result-desc" id="resultDesc"></p>
