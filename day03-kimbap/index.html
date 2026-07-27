@@ -448,6 +448,20 @@
         const MAX = 3;
         let madeKimbaps = JSON.parse(localStorage.getItem('kimbaps') || '[]');
 
+        // 재료별 이미지 매핑
+        const ingredientImages = {
+            '블루베리': 'blueberry.png',
+            '딸기': 'strawberry.png',
+            '생크림': 'cream.png',
+            '연어': 'salmon.png',
+            '샤인머스캣': 'muscat.png',
+            '와사비': 'wasabi.png',
+            '파인애플': 'pineapple.png',
+            '햄': 'ham.png',
+            '키위': 'kiwi.png',
+            '참치': 'tuna.png'
+        };
+
         // 김밥 이름: 선택한 순서대로 이름 짓기
         function getKimbapName(ingredients) {
             return ingredients.map(i => i.name).join(' ') + ' 김밥';
@@ -527,6 +541,11 @@
                 const name = getKimbapName(selected);
                 const score = getScore(selected);
                 const desc = getDescription(selected, score);
+
+                // 첫 번째 재료 기준으로 이미지 변경
+                const firstIngredient = selected[0].name;
+                const imgFile = ingredientImages[firstIngredient] || 'reveal.jpeg';
+                document.querySelector('.reveal-img').src = imgFile;
 
                 resultTitle.textContent = name;
                 resultDesc.textContent = desc;
