@@ -425,9 +425,7 @@
                 <canvas id="kimbapCanvas" width="160" height="160" class="kimbap-canvas"></canvas>
             </div>
             <p class="result-title" id="resultTitle"></p>
-            <p class="result-desc" id="resultDesc"></p>
             <div class="result-ingredients" id="resultIngredients"></div>
-            <span class="score" id="resultScore"></span>
         </div>
     </div>
 
@@ -555,13 +553,11 @@
                 document.querySelector('.reveal-img').src = imgFile;
 
                 resultTitle.textContent = name;
-                resultDesc.textContent = desc;
                 resultIngredients.textContent = selected.map(s => s.emoji).join(' ');
-                resultScore.textContent = `맛 점수: ${score}점`;
                 result.classList.add('show');
 
                 // 컬렉션에 추가
-                const kimbap = { name, ingredients: [...selected], score, date: new Date().toLocaleDateString('ko-KR') };
+                const kimbap = { name, ingredients: [...selected], date: new Date().toLocaleDateString('ko-KR') };
                 madeKimbaps.unshift(kimbap);
                 if (madeKimbaps.length > 10) madeKimbaps.pop();
                 localStorage.setItem('kimbaps', JSON.stringify(madeKimbaps));
@@ -576,7 +572,7 @@
             collectionList.innerHTML = madeKimbaps.map(k =>
                 `<div class="collection-item">
                     <span class="mini-ingredients">${k.ingredients.map(i => i.emoji).join('')}</span>
-                    <span>${k.name} (${k.score}점)</span>
+                    <span>${k.name}</span>
                 </div>`
             ).join('');
         }
