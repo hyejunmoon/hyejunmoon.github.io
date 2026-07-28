@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 04 — Alphabet Vending Machine | hyejunmoon</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #1a1a2e;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
+            color: #fff;
+        }
+
+        .back-link {
+            position: fixed;
+            top: 1.5rem;
+            left: 1.5rem;
+            color: rgba(255,255,255,0.4);
+            text-decoration: none;
+            font-size: 0.9rem;
+            z-index: 200;
+            transition: color 0.2s;
+        }
+        .back-link:hover { color: #fff; }
+
+        .machine {
+            background: linear-gradient(180deg, #2d2d4e 0%, #1f1f3a 100%);
+            border: 4px solid #444;
+            border-radius: 20px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5),
+                        inset 0 2px 0 rgba(255,255,255,0.1);
+            position: relative;
+        }
+
+        .machine-top {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .machine-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #ff6b6b;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            text-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+        }
+
+        .machine-subtitle {
+            font-size: 0.7rem;
+            color: #666;
+            margin-top: 0.3rem;
+        }
+
+        /* 디스플레이 */
+        .display {
+            background: #0a0a15;
+            border: 2px solid #333;
+            border-radius: 10px;
+            min-height: 200px;
+            margin-bottom: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .display-glass {
+            flex: 1;
+            position: relative;
+            min-height: 150px;
+        }
+
+        /* 선반들 */
+        .shelf {
+            position: absolute;
+            left: 10%;
+            right: 10%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #555, transparent);
+        }
+
+        .shelf-1 { top: 25%; }
+        .shelf-2 { top: 50%; }
+        .shelf-3 { top: 75%; }
+
+        /* 선반 위 알파벳 캔들 */
+        .can {
+            position: absolute;
+            width: 28px;
+            height: 36px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+            transition: opacity 0.3s;
+        }
+
+        /* 떨어지는 캔 */
+        .falling-can {
+            position: absolute;
+            width: 36px;
+            height: 44px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+            animation: fallDown 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+            z-index: 10;
+        }
+
+        @keyframes fallDown {
+            0% { top: 10%; opacity: 1; transform: rotate(0deg); }
+            70% { top: 78%; transform: rotate(5deg); }
+            85% { top: 74%; transform: rotate(-3deg); }
+            100% { top: 78%; opacity: 1; transform: rotate(0deg); }
+        }
+
+        /* 출력구 */
+        .output-slot {
+            background: #111;
+            border-top: 2px solid #333;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0 0 8px 8px;
+            position: relative;
+        }
+
+        .output-slot::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 20%;
+            right: 20%;
+            height: 100%;
+            background: linear-gradient(180deg, rgba(0,0,0,0.8), transparent);
+            border-radius: 0 0 20px 20px;
+        }
+
+        .output-label {
+            font-size: 0.6rem;
+            color: #444;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+        }
+
+        /* 버튼 패드 */
+        .button-pad {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 0.4rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .vend-btn {
+            aspect-ratio: 1;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            font-weight: 900;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: 0 3px 0 rgba(0,0,0,0.3), 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .vend-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 0 rgba(0,0,0,0.3), 0 6px 12px rgba(0,0,0,0.3);
+        }
+
+        .vend-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px 0 rgba(0,0,0,0.3), 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* 수집된 알파벳 */
+        .collected {
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            padding: 1rem;
+            min-height: 60px;
+        }
+
+        .collected-title {
+            font-size: 0.7rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin-bottom: 0.6rem;
+        }
+
+        .collected-letters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+            min-height: 30px;
+            align-items: center;
+        }
+
+        .collected-letter {
+            width: 28px;
+            height: 28px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 900;
+            color: #fff;
+            animation: popIn 0.3s ease-out;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0); }
+            60% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .clear-btn {
+            margin-top: 0.8rem;
+            background: none;
+            border: 1px solid #444;
+            color: #666;
+            padding: 0.4rem 0.8rem;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .clear-btn:hover {
+            border-color: #ff6b6b;
+            color: #ff6b6b;
+        }
+
+        /* 동전 투입구 */
+        .coin-slot {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            width: 24px;
+            height: 4px;
+            background: #111;
+            border: 1px solid #555;
+            border-radius: 2px;
+        }
+
+        /* LED 표시등 */
+        .led {
+            position: absolute;
+            top: 2rem;
+            left: 2rem;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #00ff88;
+            box-shadow: 0 0 6px #00ff88;
+            animation: blink 2s ease-in-out infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+    </style>
+</head>
+<body>
+    <a href="/" class="back-link">&larr; Home</a>
+
+    <div class="machine">
+        <div class="led"></div>
+        <div class="coin-slot"></div>
+
+        <div class="machine-top">
+            <p class="machine-title">Alphabet Vending</p>
+            <p class="machine-subtitle">Press a letter to vend</p>
+        </div>
+
+        <div class="display">
+            <div class="display-glass" id="displayGlass">
+                <div class="shelf shelf-1"></div>
+                <div class="shelf shelf-2"></div>
+                <div class="shelf shelf-3"></div>
+            </div>
+            <div class="output-slot">
+                <span class="output-label">take your letter</span>
+            </div>
+        </div>
+
+        <div class="button-pad" id="buttonPad"></div>
+
+        <div class="collected">
+            <p class="collected-title">Collected</p>
+            <div class="collected-letters" id="collectedLetters"></div>
+            <button class="clear-btn" id="clearBtn">clear</button>
+        </div>
+    </div>
+
+    <script>
+        const displayGlass = document.getElementById('displayGlass');
+        const buttonPad = document.getElementById('buttonPad');
+        const collectedLetters = document.getElementById('collectedLetters');
+        const clearBtn = document.getElementById('clearBtn');
+
+        // 알파벳별 색상
+        const colors = [
+            '#ff6b6b', '#ffa94d', '#ffd43b', '#69db7c', '#38d9a9',
+            '#4dabf7', '#748ffc', '#9775fa', '#da77f2', '#f783ac',
+            '#ff8787', '#ffb347', '#ffe066', '#8ce99a', '#63e6be',
+            '#74c0fc', '#91a7ff', '#b197fc', '#e599f7', '#faa2c1',
+            '#e03131', '#e8590c', '#f08c00', '#2f9e44', '#099268',
+            '#1c7ed6'
+        ];
+
+        function getColor(letter) {
+            return colors[letter.charCodeAt(0) - 65];
+        }
+
+        // 선반에 캔 배치
+        function populateShelves() {
+            const existing = displayGlass.querySelectorAll('.can');
+            existing.forEach(c => c.remove());
+
+            const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+            const shelves = [25, 50, 75]; // top %
+
+            letters.forEach((letter, i) => {
+                const shelfIndex = Math.floor(i / 9);
+                if (shelfIndex > 2) return;
+
+                const can = document.createElement('div');
+                can.className = 'can';
+                can.textContent = letter;
+                can.style.background = getColor(letter);
+                can.style.top = `${shelves[shelfIndex] - 10}%`;
+                can.style.left = `${12 + (i % 9) * 9}%`;
+                displayGlass.appendChild(can);
+            });
+        }
+
+        // 버튼 생성
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach((letter, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'vend-btn';
+            btn.textContent = letter;
+            btn.style.background = getColor(letter);
+            btn.style.color = '#fff';
+            btn.addEventListener('click', () => vendLetter(letter));
+            buttonPad.appendChild(btn);
+        });
+
+        // 자판기 동작
+        function vendLetter(letter) {
+            const color = getColor(letter);
+
+            // 떨어지는 캔 생성
+            const fallingCan = document.createElement('div');
+            fallingCan.className = 'falling-can';
+            fallingCan.textContent = letter;
+            fallingCan.style.background = color;
+            fallingCan.style.left = `${30 + Math.random() * 40}%`;
+            displayGlass.appendChild(fallingCan);
+
+            // 애니메이션 끝나면 제거 + 수집
+            setTimeout(() => {
+                fallingCan.remove();
+                addToCollection(letter, color);
+            }, 700);
+        }
+
+        // 수집 영역에 추가
+        function addToCollection(letter, color) {
+            const el = document.createElement('div');
+            el.className = 'collected-letter';
+            el.textContent = letter;
+            el.style.background = color;
+            collectedLetters.appendChild(el);
+        }
+
+        // 초기화
+        clearBtn.addEventListener('click', () => {
+            collectedLetters.innerHTML = '';
+        });
+
+        populateShelves();
+    </script>
+</body>
+</html>
