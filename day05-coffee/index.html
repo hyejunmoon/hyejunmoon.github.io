@@ -11,10 +11,6 @@
             overflow: hidden;
             background: #1a1a1a;
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             color: #fff;
             touch-action: none;
@@ -28,6 +24,12 @@
             text-decoration: none;
             font-size: 0.85rem;
             z-index: 200;
+        }
+
+        #threeCanvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
         }
 
         /* 단계 표시 */
@@ -66,7 +68,6 @@
         .instruction-text {
             font-size: 1rem;
             font-weight: 600;
-            color: #fff;
             margin-bottom: 0.3rem;
         }
 
@@ -97,90 +98,6 @@
             background: #fff;
         }
 
-        /* 유리잔 */
-        .glass-container {
-            position: relative;
-            width: 140px;
-            height: 280px;
-        }
-
-        .glass {
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 120px;
-            height: 240px;
-            border: 3px solid rgba(200, 220, 255, 0.4);
-            border-top: none;
-            border-radius: 0 0 12px 12px;
-            overflow: hidden;
-            background: rgba(200, 220, 255, 0.05);
-            box-shadow: inset 0 0 30px rgba(200, 220, 255, 0.03),
-                        0 10px 40px rgba(0,0,0,0.3);
-        }
-
-        .glass::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -3px;
-            right: -3px;
-            height: 3px;
-            background: rgba(200, 220, 255, 0.3);
-            border-radius: 3px;
-        }
-
-        /* 유리 하이라이트 */
-        .glass-highlight {
-            position: absolute;
-            top: 10%;
-            left: 8%;
-            width: 3px;
-            height: 60%;
-            background: linear-gradient(180deg, rgba(255,255,255,0.2), transparent);
-            border-radius: 2px;
-        }
-
-        /* 액체 레이어들 */
-        .liquid-layer {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            transition: height 0.3s ease-out;
-        }
-
-        #waterLayer {
-            background: linear-gradient(180deg, rgba(180, 210, 240, 0.4), rgba(150, 190, 220, 0.5));
-            height: 0%;
-            z-index: 1;
-        }
-
-        #espressoLayer {
-            background: linear-gradient(180deg, rgba(80, 40, 10, 0.9), rgba(50, 25, 5, 0.95));
-            height: 0%;
-            z-index: 2;
-        }
-
-        /* 얼음 */
-        .ice {
-            position: absolute;
-            background: rgba(200, 230, 255, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.6);
-            border-radius: 4px;
-            z-index: 3;
-            opacity: 0;
-            transition: opacity 0.5s;
-        }
-
-        .ice.visible { opacity: 1; }
-
-        .ice-1 { width: 22px; height: 20px; left: 20%; bottom: 45%; transform: rotate(5deg); }
-        .ice-2 { width: 18px; height: 22px; left: 55%; bottom: 50%; transform: rotate(-8deg); }
-        .ice-3 { width: 20px; height: 18px; left: 35%; bottom: 60%; transform: rotate(12deg); }
-        .ice-4 { width: 16px; height: 20px; left: 65%; bottom: 35%; transform: rotate(-3deg); }
-
         /* 완료 화면 */
         .complete {
             position: fixed;
@@ -192,16 +109,9 @@
             flex-direction: column;
             background: rgba(0,0,0,0.8);
             z-index: 300;
-            animation: fadeIn 0.5s ease;
         }
 
         .complete.show { display: flex; }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
         .complete-emoji { font-size: 4rem; margin-bottom: 1rem; }
         .complete-text { font-size: 1.3rem; font-weight: 700; margin-bottom: 0.5rem; }
         .complete-sub { font-size: 0.9rem; color: #888; margin-bottom: 2rem; }
@@ -217,7 +127,7 @@
             cursor: pointer;
         }
 
-        /* 시작 화면 - 터치하여 시작 */
+        /* 시작 화면 */
         .start-screen {
             position: fixed;
             top: 0; left: 0;
@@ -231,7 +141,6 @@
         }
 
         .start-screen.hidden { display: none; }
-
         .start-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; }
         .start-sub { font-size: 0.9rem; color: #888; margin-bottom: 2rem; text-align: center; line-height: 1.6; padding: 0 2rem; }
         .start-tap { font-size: 1rem; color: #00704a; animation: fadeInOut 2s ease-in-out infinite; }
@@ -288,38 +197,23 @@
         <p class="start-tap">화면을 터치하여 시작</p>
     </div>
 
-    <!-- 단계 표시 -->
+    <!-- UI 오버레이 -->
     <div class="step-indicator">
         <div class="step-dot active" id="dot1"></div>
         <div class="step-dot" id="dot2"></div>
         <div class="step-dot" id="dot3"></div>
     </div>
 
-    <!-- 지시 -->
     <div class="instruction">
         <p class="instruction-text" id="instrText">오른쪽으로 기울이세요</p>
         <p class="instruction-sub" id="instrSub">에스프레소 샷 추출</p>
     </div>
 
-    <!-- 유리잔 -->
-    <div class="glass-container">
-        <div class="glass">
-            <div class="glass-highlight"></div>
-            <div class="liquid-layer" id="waterLayer"></div>
-            <div class="liquid-layer" id="espressoLayer"></div>
-            <div class="ice ice-1" id="ice1"></div>
-            <div class="ice ice-2" id="ice2"></div>
-            <div class="ice ice-3" id="ice3"></div>
-            <div class="ice ice-4" id="ice4"></div>
-        </div>
-    </div>
-
-    <!-- 진행 바 -->
     <div class="progress-bar">
         <div class="progress-fill" id="progressFill"></div>
     </div>
 
-    <!-- 완료 화면 -->
+    <!-- 완료 -->
     <div class="complete" id="completeScreen">
         <p class="complete-emoji">☕</p>
         <p class="complete-text">아이스 아메리카노 완성!</p>
@@ -327,118 +221,221 @@
         <button class="restart-btn" id="restartBtn">다시 만들기</button>
     </div>
 
-    <script>
+    <!-- Three.js -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+        // Three.js 씬 설정
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x1a1a1a);
+
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(0, 1.5, 4);
+        camera.lookAt(0, 0.5, 0);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.2;
+        document.body.insertBefore(renderer.domElement, document.body.firstChild);
+
+        // 조명
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
+
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
+        dirLight.position.set(3, 5, 3);
+        scene.add(dirLight);
+
+        const backLight = new THREE.DirectionalLight(0x88aaff, 0.3);
+        backLight.position.set(-2, 3, -3);
+        scene.add(backLight);
+
+        // 바닥 (반사면)
+        const floorGeo = new THREE.PlaneGeometry(10, 10);
+        const floorMat = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.8, roughness: 0.3 });
+        const floor = new THREE.Mesh(floorGeo, floorMat);
+        floor.rotation.x = -Math.PI / 2;
+        floor.position.y = -0.01;
+        scene.add(floor);
+
+        // 3D 유리잔 로드
+        let glassModel = null;
+        const loader = new GLTFLoader();
+        loader.load('glass.glb', (gltf) => {
+            glassModel = gltf.scene;
+            glassModel.scale.set(1, 1, 1);
+            glassModel.position.set(0, 0, 0);
+
+            // 유리 재질 적용
+            glassModel.traverse((child) => {
+                if (child.isMesh) {
+                    child.material = new THREE.MeshPhysicalMaterial({
+                        color: 0xffffff,
+                        metalness: 0,
+                        roughness: 0.05,
+                        transmission: 0.9,
+                        thickness: 0.5,
+                        ior: 1.5,
+                        transparent: true,
+                        opacity: 0.3,
+                    });
+                }
+            });
+
+            scene.add(glassModel);
+        });
+
+        // 커피 액체 (에스프레소)
+        const espressoGeo = new THREE.CylinderGeometry(0.35, 0.3, 0, 32);
+        const espressoMat = new THREE.MeshStandardMaterial({
+            color: 0x3d1f0a,
+            metalness: 0.1,
+            roughness: 0.4,
+            transparent: true,
+            opacity: 0.9,
+        });
+        const espressoMesh = new THREE.Mesh(espressoGeo, espressoMat);
+        espressoMesh.position.set(0, 0.05, 0);
+        scene.add(espressoMesh);
+
+        // 물
+        const waterGeo = new THREE.CylinderGeometry(0.35, 0.3, 0, 32);
+        const waterMat = new THREE.MeshPhysicalMaterial({
+            color: 0x8ec8e8,
+            metalness: 0,
+            roughness: 0.1,
+            transmission: 0.6,
+            transparent: true,
+            opacity: 0.4,
+        });
+        const waterMesh = new THREE.Mesh(waterGeo, waterMat);
+        waterMesh.position.set(0, 0.05, 0);
+        scene.add(waterMesh);
+
+        // 얼음 큐브들
+        const iceCubes = [];
+        const iceGeo = new THREE.BoxGeometry(0.15, 0.15, 0.15);
+        const iceMat = new THREE.MeshPhysicalMaterial({
+            color: 0xd4f1f9,
+            metalness: 0,
+            roughness: 0.1,
+            transmission: 0.7,
+            transparent: true,
+            opacity: 0.6,
+        });
+
+        const icePositions = [
+            { x: -0.1, y: 0.8, z: 0.1, rx: 0.3, ry: 0.5 },
+            { x: 0.12, y: 0.9, z: -0.05, rx: 0.7, ry: 0.2 },
+            { x: 0, y: 1.0, z: 0.12, rx: 0.1, ry: 0.8 },
+            { x: -0.08, y: 1.1, z: -0.1, rx: 0.5, ry: 0.4 },
+        ];
+
+        icePositions.forEach(pos => {
+            const cube = new THREE.Mesh(iceGeo, iceMat);
+            cube.position.set(pos.x, pos.y, pos.z);
+            cube.rotation.set(pos.rx, pos.ry, 0);
+            cube.visible = false;
+            scene.add(cube);
+            iceCubes.push(cube);
+        });
+
+        // 게임 로직
         const startScreen = document.getElementById('startScreen');
         const instrText = document.getElementById('instrText');
         const instrSub = document.getElementById('instrSub');
         const progressFill = document.getElementById('progressFill');
-        const espressoLayer = document.getElementById('espressoLayer');
-        const waterLayer = document.getElementById('waterLayer');
         const completeScreen = document.getElementById('completeScreen');
         const restartBtn = document.getElementById('restartBtn');
         const dots = [document.getElementById('dot1'), document.getElementById('dot2'), document.getElementById('dot3')];
-        const ices = [document.getElementById('ice1'), document.getElementById('ice2'), document.getElementById('ice3'), document.getElementById('ice4')];
 
-        let currentStep = 0; // 0: espresso, 1: ice, 2: water
+        let currentStep = 0;
         let progress = 0;
-        let gamma = 0, beta = 0;
-        let lastShakeTime = 0;
+        let gamma = 0;
         let shakeCount = 0;
+        let lastShakeTime = 0;
         let prevAccel = 0;
         let gameStarted = false;
 
-        // iOS 자이로 권한 + 게임 시작
         startScreen.addEventListener('click', async () => {
             if (typeof DeviceOrientationEvent !== 'undefined' &&
                 typeof DeviceOrientationEvent.requestPermission === 'function') {
                 const response = await DeviceOrientationEvent.requestPermission();
-                if (response === 'granted') {
-                    enableSensors();
-                }
-            } else {
-                enableSensors();
+                if (response !== 'granted') return;
             }
-            startScreen.classList.add('hidden');
-            gameStarted = true;
-        });
 
-        function enableSensors() {
             window.addEventListener('deviceorientation', (e) => {
-                gamma = e.gamma || 0; // 좌우 기울기 (-90 ~ 90)
-                beta = e.beta || 0;   // 앞뒤 기울기
+                gamma = e.gamma || 0;
             });
 
             window.addEventListener('devicemotion', (e) => {
                 const accel = e.accelerationIncludingGravity;
                 if (!accel) return;
-                const totalAccel = Math.abs(accel.x) + Math.abs(accel.y) + Math.abs(accel.z);
-                const delta = Math.abs(totalAccel - prevAccel);
-                prevAccel = totalAccel;
+                const total = Math.abs(accel.x) + Math.abs(accel.y) + Math.abs(accel.z);
+                const delta = Math.abs(total - prevAccel);
+                prevAccel = total;
 
                 if (delta > 15 && Date.now() - lastShakeTime > 300) {
                     lastShakeTime = Date.now();
                     if (currentStep === 1) {
                         shakeCount++;
                         progress = Math.min(1, shakeCount / 8);
-                        updateProgress();
                     }
                 }
             });
-        }
 
-        // 게임 루프
-        function gameLoop() {
-            if (!gameStarted) {
-                requestAnimationFrame(gameLoop);
-                return;
-            }
+            startScreen.classList.add('hidden');
+            gameStarted = true;
+        });
+
+        function updateGame() {
+            if (!gameStarted) return;
 
             if (currentStep === 0) {
-                // 에스프레소: 오른쪽 기울이기 (gamma > 25)
                 if (gamma > 25) {
                     progress = Math.min(1, progress + 0.005);
                 } else {
-                    // 기울이지 않으면 약간 감소 (유지해야 함)
                     progress = Math.max(0, progress - 0.002);
                 }
-                espressoLayer.style.height = (progress * 25) + '%';
-                updateProgress();
+                // 에스프레소 높이 업데이트
+                const h = progress * 0.5;
+                espressoMesh.geometry.dispose();
+                espressoMesh.geometry = new THREE.CylinderGeometry(0.35, 0.3, h, 32);
+                espressoMesh.position.y = h / 2 + 0.05;
 
-                if (progress >= 1) {
-                    nextStep();
-                }
+                if (progress >= 1) nextStep();
             } else if (currentStep === 1) {
-                // 얼음: 흔들기 (devicemotion에서 처리)
                 const iceCount = Math.floor(progress * 4);
-                ices.forEach((ice, i) => {
-                    if (i < iceCount) ice.classList.add('visible');
-                });
-
-                if (progress >= 1) {
-                    nextStep();
-                }
+                iceCubes.forEach((cube, i) => { cube.visible = i < iceCount; });
+                if (progress >= 1) nextStep();
             } else if (currentStep === 2) {
-                // 물: 왼쪽 기울이기 (gamma < -25)
                 if (gamma < -25) {
                     progress = Math.min(1, progress + 0.004);
                 } else {
                     progress = Math.max(0, progress - 0.001);
                 }
-                waterLayer.style.height = (25 + progress * 55) + '%';
-                updateProgress();
+                // 물 높이 업데이트
+                const wh = progress * 1.2;
+                waterMesh.geometry.dispose();
+                waterMesh.geometry = new THREE.CylinderGeometry(0.35, 0.3, wh, 32);
+                waterMesh.position.y = wh / 2 + 0.05;
 
-                if (progress >= 1) {
-                    completeGame();
-                }
+                if (progress >= 1) completeGame();
             }
 
-            requestAnimationFrame(gameLoop);
-        }
-
-        function updateProgress() {
             progressFill.style.width = (progress * 100) + '%';
-
-            // 색상 변경
             if (currentStep === 0) progressFill.style.background = '#5c3317';
             else if (currentStep === 1) progressFill.style.background = '#a8d8ea';
             else progressFill.style.background = '#87ceeb';
@@ -470,16 +467,17 @@
             completeScreen.classList.add('show');
         }
 
-        // 다시 만들기
         restartBtn.addEventListener('click', () => {
             currentStep = 0;
             progress = 0;
             shakeCount = 0;
             gameStarted = true;
 
-            espressoLayer.style.height = '0%';
-            waterLayer.style.height = '0%';
-            ices.forEach(ice => ice.classList.remove('visible'));
+            espressoMesh.geometry.dispose();
+            espressoMesh.geometry = new THREE.CylinderGeometry(0.35, 0.3, 0, 32);
+            waterMesh.geometry.dispose();
+            waterMesh.geometry = new THREE.CylinderGeometry(0.35, 0.3, 0, 32);
+            iceCubes.forEach(c => { c.visible = false; });
             progressFill.style.width = '0%';
             completeScreen.classList.remove('show');
 
@@ -487,12 +485,32 @@
                 dot.classList.remove('active', 'done');
                 if (i === 0) dot.classList.add('active');
             });
-
             instrText.textContent = '오른쪽으로 기울이세요';
             instrSub.textContent = '에스프레소 샷 추출';
         });
 
-        gameLoop();
+        // 렌더 루프
+        function animate() {
+            requestAnimationFrame(animate);
+            updateGame();
+
+            // 잔 기울기 반영 (미세하게)
+            if (glassModel) {
+                const targetRotZ = -gamma * 0.005;
+                glassModel.rotation.z += (targetRotZ - glassModel.rotation.z) * 0.1;
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        // 리사이즈
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        animate();
     </script>
 </body>
 </html>
