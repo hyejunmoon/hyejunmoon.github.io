@@ -105,14 +105,14 @@
             width: 100%; height: 100%;
             display: none;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-end;
             flex-direction: column;
-            background: rgba(0,0,0,0.8);
+            padding-bottom: 6rem;
+            background: rgba(0,0,0,0.4);
             z-index: 300;
         }
 
         .complete.show { display: flex; }
-        .complete-emoji { font-size: 4rem; margin-bottom: 1rem; }
         .complete-text { font-size: 1.3rem; font-weight: 700; margin-bottom: 0.5rem; }
         .complete-sub { font-size: 0.9rem; color: #888; margin-bottom: 2rem; }
 
@@ -215,7 +215,6 @@
 
     <!-- 완료 -->
     <div class="complete" id="completeScreen">
-        <p class="complete-emoji">☕</p>
         <p class="complete-text">아이스 아메리카노 완성!</p>
         <p class="complete-sub">당신의 커피가 준비되었습니다</p>
         <button class="restart-btn" id="restartBtn">다시 만들기</button>
