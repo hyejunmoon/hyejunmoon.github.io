@@ -263,13 +263,7 @@
         backLight.position.set(-2, 3, -3);
         scene.add(backLight);
 
-        // 바닥 (반사면)
-        const floorGeo = new THREE.PlaneGeometry(10, 10);
-        const floorMat = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.8, roughness: 0.3 });
-        const floor = new THREE.Mesh(floorGeo, floorMat);
-        floor.rotation.x = -Math.PI / 2;
-        floor.position.y = -0.01;
-        scene.add(floor);
+        // 바닥 제거 (배경만 사용)
 
         // 3D 유리잔 로드
         let glassModel = null;
