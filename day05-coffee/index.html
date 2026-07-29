@@ -286,6 +286,7 @@
                         transparent: true,
                         opacity: 0.3,
                     });
+                    child.renderOrder = 10;
                 }
             });
 
@@ -300,8 +301,10 @@
             roughness: 0.4,
             transparent: true,
             opacity: 0.9,
+            depthWrite: false,
         });
         const espressoMesh = new THREE.Mesh(espressoGeo, espressoMat);
+        espressoMesh.renderOrder = 1;
         espressoMesh.position.set(0, 0.05, 0);
         scene.add(espressoMesh);
 
@@ -314,8 +317,10 @@
             transmission: 0.6,
             transparent: true,
             opacity: 0.4,
+            depthWrite: false,
         });
         const waterMesh = new THREE.Mesh(waterGeo, waterMat);
+        waterMesh.renderOrder = 2;
         waterMesh.position.set(0, 0.05, 0);
         scene.add(waterMesh);
 
