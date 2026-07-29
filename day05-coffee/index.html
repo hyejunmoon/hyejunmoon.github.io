@@ -242,8 +242,8 @@
         scene.background = new THREE.Color(0x1a1a1a);
 
         const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
-        camera.position.set(0, 1.5, 4);
-        camera.lookAt(0, 0.5, 0);
+        camera.position.set(0, 2, 5);
+        camera.lookAt(0, 0.8, 0);
 
         const renderer = new THREE.WebGLRenderer({ antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
@@ -277,7 +277,7 @@
         const loader = new GLTFLoader();
         loader.load('glass.glb', (gltf) => {
             glassModel = gltf.scene;
-            glassModel.scale.set(1, 1, 1);
+            glassModel.scale.set(0.4, 0.4, 0.4);
             glassModel.position.set(0, 0, 0);
 
             // 유리 재질 적용
