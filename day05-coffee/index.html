@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 05 — Spill the Coffee | hyejunmoon</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            overflow: hidden;
+            background: #f5f0eb;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        .back-link {
+            position: fixed;
+            top: 1.5rem;
+            left: 1.5rem;
+            color: #999;
+            text-decoration: none;
+            font-size: 0.9rem;
+            z-index: 200;
+            transition: color 0.2s;
+        }
+        .back-link:hover { color: #333; }
+
+        .scene {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 스타벅스 컵 */
+        .cup {
+            position: relative;
+            width: 120px;
+            height: 200px;
+        }
+
+        .cup-body {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 180px;
+            background: #fff;
+            border-radius: 8px 8px 20px 20px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+            overflow: hidden;
+            border: 2px solid #e0e0e0;
+        }
+
+        /* 스타벅스 로고 영역 */
+        .cup-logo {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #00704a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 5;
+        }
+
+        .cup-logo::after {
+            content: '★';
+            color: #fff;
+            font-size: 1.4rem;
+        }
+
+        /* 뚜껑 */
+        .cup-lid {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 108px;
+            height: 20px;
+            background: #2d2d2d;
+            border-radius: 6px 6px 2px 2px;
+            z-index: 10;
+        }
+
+        .cup-lid::before {
+            content: '';
+            position: absolute;
+            top: -4px;
+            left: 20%;
+            right: 20%;
+            height: 6px;
+            background: #2d2d2d;
+            border-radius: 3px 3px 0 0;
+        }
+
+        /* 빨대구멍 */
+        .lid-hole {
+            position: absolute;
+            top: 4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 14px;
+            height: 8px;
+            background: #111;
+            border-radius: 50%;
+        }
+
+        /* 커피 액체 - Canvas */
+        #liquidCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+        }
+
+        /* 쏟아지는 커피 파티클 캔버스 */
+        #spillCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        /* 얼음 */
+        .ice-cube {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: rgba(200, 230, 255, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            border-radius: 3px;
+            z-index: 3;
+            transition: transform 0.3s ease-out;
+        }
+
+        /* 안내 문구 */
+        .hint {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #aaa;
+            font-size: 0.8rem;
+            text-align: center;
+            pointer-events: none;
+            animation: fadeInOut 3s ease-in-out infinite;
+        }
+
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 1; }
+        }
+
+        /* 바닥 물기 */
+        .puddle {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 0;
+            background: linear-gradient(180deg, rgba(60, 30, 10, 0.3), rgba(60, 30, 10, 0.1));
+            transition: height 0.5s ease;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        /* 커피 레벨 표시 */
+        .level-indicator {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            color: #999;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <a href="/" class="back-link">&larr; Home</a>
+
+    <div class="scene">
+        <div class="cup" id="cup">
+            <div class="cup-lid">
+                <div class="lid-hole"></div>
+            </div>
+            <div class="cup-body" id="cupBody">
+                <canvas id="liquidCanvas"></canvas>
+                <div class="cup-logo"></div>
+            </div>
+        </div>
+    </div>
+
+    <canvas id="spillCanvas"></canvas>
+    <div class="puddle" id="puddle"></div>
+    <div class="hint">노트북을 좌우로 기울여보세요</div>
+    <div class="level-indicator" id="levelIndicator">Coffee: 100%</div>
+
+    <script>
+        const cupBody = document.getElementById('cupBody');
+        const liquidCanvas = document.getElementById('liquidCanvas');
+        const spillCanvas = document.getElementById('spillCanvas');
+        const puddle = document.getElementById('puddle');
+        const levelIndicator = document.getElementById('levelIndicator');
+        const lCtx = liquidCanvas.getContext('2d');
+        const sCtx = spillCanvas.getContext('2d');
+
+        let tilt = 0; // -1 ~ 1
+        let coffeeLevel = 1.0; // 0 ~ 1
+        let spillParticles = [];
+        let time = 0;
+        let hasGyro = false;
+
+        function resizeCanvases() {
+            liquidCanvas.width = cupBody.offsetWidth;
+            liquidCanvas.height = cupBody.offsetHeight;
+            spillCanvas.width = window.innerWidth;
+            spillCanvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', resizeCanvases);
+        resizeCanvases();
+
+        // 기울기 감지 - DeviceOrientation
+        window.addEventListener('deviceorientation', (e) => {
+            if (e.gamma !== null) {
+                hasGyro = true;
+                tilt = Math.max(-1, Math.min(1, e.gamma / 40));
+            }
+        });
+
+        // 마우스 폴백 (데스크탑)
+        document.addEventListener('mousemove', (e) => {
+            if (!hasGyro) {
+                tilt = (e.clientX / window.innerWidth - 0.5) * 2;
+            }
+        });
+
+        // 커피 액체 그리기
+        function drawLiquid() {
+            const w = liquidCanvas.width;
+            const h = liquidCanvas.height;
+            lCtx.clearRect(0, 0, w, h);
+
+            if (coffeeLevel <= 0) return;
+
+            const baseHeight = h * coffeeLevel * 0.75;
+            const tiltOffset = tilt * 40 * coffeeLevel;
+
+            // 커피 색상
+            const gradient = lCtx.createLinearGradient(0, h - baseHeight, 0, h);
+            gradient.addColorStop(0, 'rgba(60, 30, 10, 0.85)');
+            gradient.addColorStop(0.3, 'rgba(80, 40, 15, 0.9)');
+            gradient.addColorStop(1, 'rgba(40, 20, 5, 0.95)');
+
+            lCtx.fillStyle = gradient;
+            lCtx.beginPath();
+
+            // 물결 표면
+            const leftY = h - baseHeight + tiltOffset;
+            const rightY = h - baseHeight - tiltOffset;
+
+            lCtx.moveTo(0, leftY);
+
+            // 파도 곡선
+            for (let x = 0; x <= w; x++) {
+                const ratio = x / w;
+                const y = leftY + (rightY - leftY) * ratio;
+                const wave = Math.sin(time * 3 + x * 0.05) * 2 * coffeeLevel;
+                const wave2 = Math.sin(time * 5 + x * 0.08) * 1 * coffeeLevel;
+                lCtx.lineTo(x, y + wave + wave2);
+            }
+
+            lCtx.lineTo(w, h);
+            lCtx.lineTo(0, h);
+            lCtx.closePath();
+            lCtx.fill();
+
+            // 얼음 조각 그리기
+            drawIceCubes(leftY, rightY, w, h);
+        }
+
+        // 얼음
+        const iceCubes = [
+            { x: 0.3, size: 14 },
+            { x: 0.5, size: 12 },
+            { x: 0.7, size: 15 },
+        ];
+
+        function drawIceCubes(leftY, rightY, w, h) {
+            if (coffeeLevel < 0.15) return;
+
+            iceCubes.forEach(ice => {
+                const iceX = (ice.x + tilt * 0.15) * w;
+                const surfaceY = leftY + (rightY - leftY) * ice.x;
+                const iceY = surfaceY + 10;
+
+                if (iceY > h - 10) return;
+
+                lCtx.fillStyle = 'rgba(200, 230, 255, 0.5)';
+                lCtx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+                lCtx.lineWidth = 1;
+
+                const rotation = tilt * 0.3 + Math.sin(time * 2 + ice.x * 10) * 0.1;
+                lCtx.save();
+                lCtx.translate(iceX, iceY);
+                lCtx.rotate(rotation);
+                lCtx.fillRect(-ice.size / 2, -ice.size / 2, ice.size, ice.size);
+                lCtx.strokeRect(-ice.size / 2, -ice.size / 2, ice.size, ice.size);
+                lCtx.restore();
+            });
+        }
+
+        // 쏟기 로직
+        function spillCoffee() {
+            const spillThreshold = 0.6;
+            const absTilt = Math.abs(tilt);
+
+            if (absTilt > spillThreshold && coffeeLevel > 0) {
+                const spillRate = (absTilt - spillThreshold) * 0.008;
+                coffeeLevel = Math.max(0, coffeeLevel - spillRate);
+
+                // 파티클 생성
+                const cupRect = cupBody.getBoundingClientRect();
+                const spawnX = tilt > 0
+                    ? cupRect.right - 10
+                    : cupRect.left + 10;
+                const spawnY = cupRect.top + cupRect.height * (1 - coffeeLevel) * 0.75;
+
+                for (let i = 0; i < 2; i++) {
+                    spillParticles.push({
+                        x: spawnX + (Math.random() - 0.5) * 10,
+                        y: spawnY + Math.random() * 5,
+                        vx: tilt * (3 + Math.random() * 3),
+                        vy: -1 + Math.random() * 2,
+                        size: 3 + Math.random() * 4,
+                        life: 1,
+                        color: `rgba(${50 + Math.random() * 30}, ${20 + Math.random() * 20}, ${5 + Math.random() * 10}, `
+                    });
+                }
+            }
+        }
+
+        // 파티클 업데이트 & 그리기
+        function updateSpillParticles() {
+            sCtx.clearRect(0, 0, spillCanvas.width, spillCanvas.height);
+
+            spillParticles = spillParticles.filter(p => p.life > 0);
+
+            spillParticles.forEach(p => {
+                p.vy += 0.4; // 중력
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life -= 0.01;
+
+                // 바닥에 닿으면
+                if (p.y > spillCanvas.height - 20) {
+                    p.y = spillCanvas.height - 20;
+                    p.vy *= -0.2;
+                    p.vx *= 0.8;
+                    p.life -= 0.05;
+                }
+
+                sCtx.fillStyle = p.color + p.life + ')';
+                sCtx.beginPath();
+                sCtx.ellipse(p.x, p.y, p.size, p.size * 0.7, 0, 0, Math.PI * 2);
+                sCtx.fill();
+            });
+
+            // 바닥 웅덩이
+            const puddleHeight = Math.max(0, (1 - coffeeLevel) * 30);
+            puddle.style.height = puddleHeight + 'px';
+        }
+
+        // 레벨 표시
+        function updateLevel() {
+            const pct = Math.round(coffeeLevel * 100);
+            levelIndicator.textContent = `Coffee: ${pct}%`;
+            if (pct <= 0) {
+                levelIndicator.textContent = 'Coffee: EMPTY ☕';
+            }
+        }
+
+        // 메인 루프
+        function animate() {
+            time += 0.016;
+            spillCoffee();
+            drawLiquid();
+            updateSpillParticles();
+            updateLevel();
+            requestAnimationFrame(animate);
+        }
+
+        // 리필 (더블클릭)
+        document.addEventListener('dblclick', () => {
+            coffeeLevel = 1.0;
+            spillParticles = [];
+            puddle.style.height = '0px';
+        });
+
+        resizeCanvases();
+        animate();
+    </script>
+</body>
+</html>
