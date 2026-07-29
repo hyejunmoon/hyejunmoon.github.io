@@ -2,166 +2,239 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Day 05 — Spill the Coffee | hyejunmoon</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Day 05 — Make Iced Americano | hyejunmoon</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             overflow: hidden;
-            background: #f5f0eb;
+            background: #1a1a1a;
             min-height: 100vh;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            color: #fff;
+            touch-action: none;
         }
 
         .back-link {
             position: fixed;
-            top: 1.5rem;
-            left: 1.5rem;
-            color: #999;
+            top: 1rem;
+            left: 1rem;
+            color: rgba(255,255,255,0.4);
             text-decoration: none;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             z-index: 200;
-            transition: color 0.2s;
         }
-        .back-link:hover { color: #333; }
 
-        .scene {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
+        /* 단계 표시 */
+        .step-indicator {
+            position: fixed;
+            top: 1.5rem;
+            left: 50%;
+            transform: translateX(-50%);
             display: flex;
-            align-items: center;
-            justify-content: center;
+            gap: 0.5rem;
+            z-index: 200;
         }
 
-        /* 스타벅스 컵 */
-        .cup {
+        .step-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #333;
+            transition: all 0.3s;
+        }
+
+        .step-dot.done { background: #00704a; }
+        .step-dot.active { background: #fff; box-shadow: 0 0 8px #fff; }
+
+        /* 지시 텍스트 */
+        .instruction {
+            position: fixed;
+            top: 4rem;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            z-index: 200;
+            width: 90%;
+        }
+
+        .instruction-text {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 0.3rem;
+        }
+
+        .instruction-sub {
+            font-size: 0.8rem;
+            color: #888;
+        }
+
+        /* 진행 바 */
+        .progress-bar {
+            position: fixed;
+            bottom: 3rem;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60%;
+            height: 6px;
+            background: #333;
+            border-radius: 3px;
+            overflow: hidden;
+            z-index: 200;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            border-radius: 3px;
+            transition: width 0.1s, background 0.3s;
+            background: #fff;
+        }
+
+        /* 유리잔 */
+        .glass-container {
             position: relative;
-            width: 120px;
-            height: 200px;
+            width: 140px;
+            height: 280px;
         }
 
-        .cup-body {
+        .glass {
             position: absolute;
             bottom: 0;
             left: 50%;
             transform: translateX(-50%);
-            width: 100px;
-            height: 180px;
-            background: #fff;
-            border-radius: 8px 8px 20px 20px;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+            width: 120px;
+            height: 240px;
+            border: 3px solid rgba(200, 220, 255, 0.4);
+            border-top: none;
+            border-radius: 0 0 12px 12px;
             overflow: hidden;
-            border: 2px solid #e0e0e0;
+            background: rgba(200, 220, 255, 0.05);
+            box-shadow: inset 0 0 30px rgba(200, 220, 255, 0.03),
+                        0 10px 40px rgba(0,0,0,0.3);
         }
 
-        /* 스타벅스 로고 영역 */
-        .cup-logo {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: #00704a;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 5;
-        }
-
-        .cup-logo::after {
-            content: '★';
-            color: #fff;
-            font-size: 1.4rem;
-        }
-
-        /* 뚜껑 */
-        .cup-lid {
-            position: absolute;
-            top: -12px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 108px;
-            height: 20px;
-            background: #2d2d2d;
-            border-radius: 6px 6px 2px 2px;
-            z-index: 10;
-        }
-
-        .cup-lid::before {
+        .glass::before {
             content: '';
             position: absolute;
-            top: -4px;
-            left: 20%;
-            right: 20%;
-            height: 6px;
-            background: #2d2d2d;
-            border-radius: 3px 3px 0 0;
-        }
-
-        /* 빨대구멍 */
-        .lid-hole {
-            position: absolute;
-            top: 4px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 14px;
-            height: 8px;
-            background: #111;
-            border-radius: 50%;
-        }
-
-        /* 커피 액체 - Canvas */
-        #liquidCanvas {
-            position: absolute;
             top: 0;
+            left: -3px;
+            right: -3px;
+            height: 3px;
+            background: rgba(200, 220, 255, 0.3);
+            border-radius: 3px;
+        }
+
+        /* 유리 하이라이트 */
+        .glass-highlight {
+            position: absolute;
+            top: 10%;
+            left: 8%;
+            width: 3px;
+            height: 60%;
+            background: linear-gradient(180deg, rgba(255,255,255,0.2), transparent);
+            border-radius: 2px;
+        }
+
+        /* 액체 레이어들 */
+        .liquid-layer {
+            position: absolute;
+            bottom: 0;
             left: 0;
             width: 100%;
-            height: 100%;
+            transition: height 0.3s ease-out;
+        }
+
+        #waterLayer {
+            background: linear-gradient(180deg, rgba(180, 210, 240, 0.4), rgba(150, 190, 220, 0.5));
+            height: 0%;
+            z-index: 1;
+        }
+
+        #espressoLayer {
+            background: linear-gradient(180deg, rgba(80, 40, 10, 0.9), rgba(50, 25, 5, 0.95));
+            height: 0%;
             z-index: 2;
         }
 
-        /* 쏟아지는 커피 파티클 캔버스 */
-        #spillCanvas {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            pointer-events: none;
-            z-index: 100;
-        }
-
         /* 얼음 */
-        .ice-cube {
+        .ice {
             position: absolute;
-            width: 16px;
-            height: 16px;
-            background: rgba(200, 230, 255, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.8);
-            border-radius: 3px;
+            background: rgba(200, 230, 255, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 4px;
             z-index: 3;
-            transition: transform 0.3s ease-out;
+            opacity: 0;
+            transition: opacity 0.5s;
         }
 
-        /* 안내 문구 */
-        .hint {
+        .ice.visible { opacity: 1; }
+
+        .ice-1 { width: 22px; height: 20px; left: 20%; bottom: 45%; transform: rotate(5deg); }
+        .ice-2 { width: 18px; height: 22px; left: 55%; bottom: 50%; transform: rotate(-8deg); }
+        .ice-3 { width: 20px; height: 18px; left: 35%; bottom: 60%; transform: rotate(12deg); }
+        .ice-4 { width: 16px; height: 20px; left: 65%; bottom: 35%; transform: rotate(-3deg); }
+
+        /* 완료 화면 */
+        .complete {
             position: fixed;
-            bottom: 2rem;
-            left: 50%;
-            transform: translateX(-50%);
-            color: #aaa;
-            font-size: 0.8rem;
-            text-align: center;
-            pointer-events: none;
-            animation: fadeInOut 3s ease-in-out infinite;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            background: rgba(0,0,0,0.8);
+            z-index: 300;
+            animation: fadeIn 0.5s ease;
         }
+
+        .complete.show { display: flex; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .complete-emoji { font-size: 4rem; margin-bottom: 1rem; }
+        .complete-text { font-size: 1.3rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .complete-sub { font-size: 0.9rem; color: #888; margin-bottom: 2rem; }
+
+        .restart-btn {
+            background: #00704a;
+            color: #fff;
+            border: none;
+            padding: 0.8rem 2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* 시작 화면 - 터치하여 시작 */
+        .start-screen {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            background: #1a1a1a;
+            z-index: 500;
+        }
+
+        .start-screen.hidden { display: none; }
+
+        .start-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .start-sub { font-size: 0.9rem; color: #888; margin-bottom: 2rem; text-align: center; line-height: 1.6; padding: 0 2rem; }
+        .start-tap { font-size: 1rem; color: #00704a; animation: fadeInOut 2s ease-in-out infinite; }
 
         @keyframes fadeInOut {
             0%, 100% { opacity: 0.4; }
@@ -174,318 +247,252 @@
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
-            background: #f5f0eb;
+            background: #1a1a1a;
             z-index: 9999;
             align-items: center;
             justify-content: center;
-        }
-
-        .notice-box {
+            flex-direction: column;
             text-align: center;
             padding: 2rem;
         }
 
-        .notice-emoji {
-            font-size: 4rem;
-            margin-bottom: 1rem;
-        }
-
-        .notice-title {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: #333;
-            margin-bottom: 0.5rem;
-        }
-
-        .notice-desc {
-            font-size: 1rem;
-            color: #666;
-            line-height: 1.6;
-            margin-bottom: 1.5rem;
-        }
-
-        .notice-url {
-            font-size: 0.85rem;
-            color: #00704a;
-            font-weight: 600;
-            background: #e8f5e9;
-            display: inline-block;
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-        }
+        .desktop-notice .notice-emoji { font-size: 4rem; margin-bottom: 1rem; }
+        .desktop-notice .notice-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .desktop-notice .notice-desc { font-size: 1rem; color: #888; line-height: 1.6; margin-bottom: 1.5rem; }
+        .desktop-notice .notice-url { font-size: 0.85rem; color: #00704a; background: #1a2e1a; padding: 0.5rem 1rem; border-radius: 8px; }
 
         @media (hover: hover) and (pointer: fine) {
             .desktop-notice { display: flex; }
-        }
-
-        /* 바닥 물기 */
-        .puddle {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 0;
-            background: linear-gradient(180deg, rgba(60, 30, 10, 0.3), rgba(60, 30, 10, 0.1));
-            transition: height 0.5s ease;
-            pointer-events: none;
-            z-index: 50;
-        }
-
-        /* 커피 레벨 표시 */
-        .level-indicator {
-            position: fixed;
-            top: 2rem;
-            right: 2rem;
-            color: #999;
-            font-size: 0.75rem;
-            font-family: monospace;
         }
     </style>
 </head>
 <body>
     <a href="/" class="back-link">&larr; Home</a>
 
-    <div class="scene">
-        <div class="cup" id="cup">
-            <div class="cup-lid">
-                <div class="lid-hole"></div>
-            </div>
-            <div class="cup-body" id="cupBody">
-                <canvas id="liquidCanvas"></canvas>
-                <div class="cup-logo"></div>
-            </div>
+    <!-- 데스크탑 안내 -->
+    <div class="desktop-notice">
+        <p class="notice-emoji">📱</p>
+        <p class="notice-title">모바일 전용 페이지입니다</p>
+        <p class="notice-desc">스마트폰으로 접속해서<br>기울이고 흔들어 보세요!</p>
+        <p class="notice-url">hyejunmoon.github.io/day05-coffee</p>
+    </div>
+
+    <!-- 시작 화면 -->
+    <div class="start-screen" id="startScreen">
+        <p class="start-title">☕ Iced Americano</p>
+        <p class="start-sub">
+            1. 오른쪽으로 기울이기 → 에스프레소 샷<br>
+            2. 위아래로 흔들기 → 얼음 추가<br>
+            3. 왼쪽으로 기울이기 → 물 채우기
+        </p>
+        <p class="start-tap">화면을 터치하여 시작</p>
+    </div>
+
+    <!-- 단계 표시 -->
+    <div class="step-indicator">
+        <div class="step-dot active" id="dot1"></div>
+        <div class="step-dot" id="dot2"></div>
+        <div class="step-dot" id="dot3"></div>
+    </div>
+
+    <!-- 지시 -->
+    <div class="instruction">
+        <p class="instruction-text" id="instrText">오른쪽으로 기울이세요</p>
+        <p class="instruction-sub" id="instrSub">에스프레소 샷 추출</p>
+    </div>
+
+    <!-- 유리잔 -->
+    <div class="glass-container">
+        <div class="glass">
+            <div class="glass-highlight"></div>
+            <div class="liquid-layer" id="waterLayer"></div>
+            <div class="liquid-layer" id="espressoLayer"></div>
+            <div class="ice ice-1" id="ice1"></div>
+            <div class="ice ice-2" id="ice2"></div>
+            <div class="ice ice-3" id="ice3"></div>
+            <div class="ice ice-4" id="ice4"></div>
         </div>
     </div>
 
-    <canvas id="spillCanvas"></canvas>
-    <div class="puddle" id="puddle"></div>
-    <div class="hint">폰을 좌우로 기울여서 커피를 쏟아보세요 (더블탭: 리필)</div>
-    <div class="level-indicator" id="levelIndicator">Coffee: 100%</div>
+    <!-- 진행 바 -->
+    <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+    </div>
 
-    <!-- 데스크탑 안내 -->
-    <div class="desktop-notice" id="desktopNotice">
-        <div class="notice-box">
-            <p class="notice-emoji">📱</p>
-            <p class="notice-title">모바일 전용 페이지입니다</p>
-            <p class="notice-desc">스마트폰으로 접속해서<br>기울여 보세요!</p>
-            <p class="notice-url">hyejunmoon.github.io/day05-coffee</p>
-        </div>
+    <!-- 완료 화면 -->
+    <div class="complete" id="completeScreen">
+        <p class="complete-emoji">☕</p>
+        <p class="complete-text">아이스 아메리카노 완성!</p>
+        <p class="complete-sub">당신의 커피가 준비되었습니다</p>
+        <button class="restart-btn" id="restartBtn">다시 만들기</button>
     </div>
 
     <script>
-        const cupBody = document.getElementById('cupBody');
-        const liquidCanvas = document.getElementById('liquidCanvas');
-        const spillCanvas = document.getElementById('spillCanvas');
-        const puddle = document.getElementById('puddle');
-        const levelIndicator = document.getElementById('levelIndicator');
-        const lCtx = liquidCanvas.getContext('2d');
-        const sCtx = spillCanvas.getContext('2d');
+        const startScreen = document.getElementById('startScreen');
+        const instrText = document.getElementById('instrText');
+        const instrSub = document.getElementById('instrSub');
+        const progressFill = document.getElementById('progressFill');
+        const espressoLayer = document.getElementById('espressoLayer');
+        const waterLayer = document.getElementById('waterLayer');
+        const completeScreen = document.getElementById('completeScreen');
+        const restartBtn = document.getElementById('restartBtn');
+        const dots = [document.getElementById('dot1'), document.getElementById('dot2'), document.getElementById('dot3')];
+        const ices = [document.getElementById('ice1'), document.getElementById('ice2'), document.getElementById('ice3'), document.getElementById('ice4')];
 
-        let tilt = 0; // -1 ~ 1
-        let coffeeLevel = 1.0; // 0 ~ 1
-        let spillParticles = [];
-        let time = 0;
-        let hasGyro = false;
+        let currentStep = 0; // 0: espresso, 1: ice, 2: water
+        let progress = 0;
+        let gamma = 0, beta = 0;
+        let lastShakeTime = 0;
+        let shakeCount = 0;
+        let prevAccel = 0;
+        let gameStarted = false;
 
-        function resizeCanvases() {
-            liquidCanvas.width = cupBody.offsetWidth;
-            liquidCanvas.height = cupBody.offsetHeight;
-            spillCanvas.width = window.innerWidth;
-            spillCanvas.height = window.innerHeight;
-        }
-
-        window.addEventListener('resize', resizeCanvases);
-        resizeCanvases();
-
-        // iOS 자이로 권한 요청
-        if (typeof DeviceOrientationEvent !== 'undefined' &&
-            typeof DeviceOrientationEvent.requestPermission === 'function') {
-            // iOS 13+ 에서는 권한 요청 필요
-            document.body.addEventListener('click', function requestGyro() {
-                DeviceOrientationEvent.requestPermission().then(response => {
-                    if (response === 'granted') {
-                        window.addEventListener('deviceorientation', handleOrientation);
-                    }
-                });
-                document.body.removeEventListener('click', requestGyro);
-            }, { once: true });
-        } else {
-            window.addEventListener('deviceorientation', handleOrientation);
-        }
-
-        function handleOrientation(e) {
-            if (e.gamma !== null) {
-                hasGyro = true;
-                tilt = Math.max(-1, Math.min(1, e.gamma / 40));
-            }
-        }
-
-        // 마우스 폴백 없음 — 모바일 전용
-
-        // 커피 액체 그리기
-        function drawLiquid() {
-            const w = liquidCanvas.width;
-            const h = liquidCanvas.height;
-            lCtx.clearRect(0, 0, w, h);
-
-            if (coffeeLevel <= 0) return;
-
-            const baseHeight = h * coffeeLevel * 0.75;
-            const tiltOffset = tilt * 40 * coffeeLevel;
-
-            // 커피 색상
-            const gradient = lCtx.createLinearGradient(0, h - baseHeight, 0, h);
-            gradient.addColorStop(0, 'rgba(60, 30, 10, 0.85)');
-            gradient.addColorStop(0.3, 'rgba(80, 40, 15, 0.9)');
-            gradient.addColorStop(1, 'rgba(40, 20, 5, 0.95)');
-
-            lCtx.fillStyle = gradient;
-            lCtx.beginPath();
-
-            // 물결 표면
-            const leftY = h - baseHeight + tiltOffset;
-            const rightY = h - baseHeight - tiltOffset;
-
-            lCtx.moveTo(0, leftY);
-
-            // 파도 곡선
-            for (let x = 0; x <= w; x++) {
-                const ratio = x / w;
-                const y = leftY + (rightY - leftY) * ratio;
-                const wave = Math.sin(time * 3 + x * 0.05) * 2 * coffeeLevel;
-                const wave2 = Math.sin(time * 5 + x * 0.08) * 1 * coffeeLevel;
-                lCtx.lineTo(x, y + wave + wave2);
-            }
-
-            lCtx.lineTo(w, h);
-            lCtx.lineTo(0, h);
-            lCtx.closePath();
-            lCtx.fill();
-
-            // 얼음 조각 그리기
-            drawIceCubes(leftY, rightY, w, h);
-        }
-
-        // 얼음
-        const iceCubes = [
-            { x: 0.3, size: 14 },
-            { x: 0.5, size: 12 },
-            { x: 0.7, size: 15 },
-        ];
-
-        function drawIceCubes(leftY, rightY, w, h) {
-            if (coffeeLevel < 0.15) return;
-
-            iceCubes.forEach(ice => {
-                const iceX = (ice.x + tilt * 0.15) * w;
-                const surfaceY = leftY + (rightY - leftY) * ice.x;
-                const iceY = surfaceY + 10;
-
-                if (iceY > h - 10) return;
-
-                lCtx.fillStyle = 'rgba(200, 230, 255, 0.5)';
-                lCtx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
-                lCtx.lineWidth = 1;
-
-                const rotation = tilt * 0.3 + Math.sin(time * 2 + ice.x * 10) * 0.1;
-                lCtx.save();
-                lCtx.translate(iceX, iceY);
-                lCtx.rotate(rotation);
-                lCtx.fillRect(-ice.size / 2, -ice.size / 2, ice.size, ice.size);
-                lCtx.strokeRect(-ice.size / 2, -ice.size / 2, ice.size, ice.size);
-                lCtx.restore();
-            });
-        }
-
-        // 쏟기 로직
-        function spillCoffee() {
-            const spillThreshold = 0.6;
-            const absTilt = Math.abs(tilt);
-
-            if (absTilt > spillThreshold && coffeeLevel > 0) {
-                const spillRate = (absTilt - spillThreshold) * 0.008;
-                coffeeLevel = Math.max(0, coffeeLevel - spillRate);
-
-                // 파티클 생성
-                const cupRect = cupBody.getBoundingClientRect();
-                const spawnX = tilt > 0
-                    ? cupRect.right - 10
-                    : cupRect.left + 10;
-                const spawnY = cupRect.top + cupRect.height * (1 - coffeeLevel) * 0.75;
-
-                for (let i = 0; i < 2; i++) {
-                    spillParticles.push({
-                        x: spawnX + (Math.random() - 0.5) * 10,
-                        y: spawnY + Math.random() * 5,
-                        vx: tilt * (3 + Math.random() * 3),
-                        vy: -1 + Math.random() * 2,
-                        size: 3 + Math.random() * 4,
-                        life: 1,
-                        color: `rgba(${50 + Math.random() * 30}, ${20 + Math.random() * 20}, ${5 + Math.random() * 10}, `
-                    });
+        // iOS 자이로 권한 + 게임 시작
+        startScreen.addEventListener('click', async () => {
+            if (typeof DeviceOrientationEvent !== 'undefined' &&
+                typeof DeviceOrientationEvent.requestPermission === 'function') {
+                const response = await DeviceOrientationEvent.requestPermission();
+                if (response === 'granted') {
+                    enableSensors();
                 }
+            } else {
+                enableSensors();
             }
-        }
-
-        // 파티클 업데이트 & 그리기
-        function updateSpillParticles() {
-            sCtx.clearRect(0, 0, spillCanvas.width, spillCanvas.height);
-
-            spillParticles = spillParticles.filter(p => p.life > 0);
-
-            spillParticles.forEach(p => {
-                p.vy += 0.4; // 중력
-                p.x += p.vx;
-                p.y += p.vy;
-                p.life -= 0.01;
-
-                // 바닥에 닿으면
-                if (p.y > spillCanvas.height - 20) {
-                    p.y = spillCanvas.height - 20;
-                    p.vy *= -0.2;
-                    p.vx *= 0.8;
-                    p.life -= 0.05;
-                }
-
-                sCtx.fillStyle = p.color + p.life + ')';
-                sCtx.beginPath();
-                sCtx.ellipse(p.x, p.y, p.size, p.size * 0.7, 0, 0, Math.PI * 2);
-                sCtx.fill();
-            });
-
-            // 바닥 웅덩이
-            const puddleHeight = Math.max(0, (1 - coffeeLevel) * 30);
-            puddle.style.height = puddleHeight + 'px';
-        }
-
-        // 레벨 표시
-        function updateLevel() {
-            const pct = Math.round(coffeeLevel * 100);
-            levelIndicator.textContent = `Coffee: ${pct}%`;
-            if (pct <= 0) {
-                levelIndicator.textContent = 'Coffee: EMPTY ☕';
-            }
-        }
-
-        // 메인 루프
-        function animate() {
-            time += 0.016;
-            spillCoffee();
-            drawLiquid();
-            updateSpillParticles();
-            updateLevel();
-            requestAnimationFrame(animate);
-        }
-
-        // 리필 (더블클릭)
-        document.addEventListener('dblclick', () => {
-            coffeeLevel = 1.0;
-            spillParticles = [];
-            puddle.style.height = '0px';
+            startScreen.classList.add('hidden');
+            gameStarted = true;
         });
 
-        resizeCanvases();
-        animate();
+        function enableSensors() {
+            window.addEventListener('deviceorientation', (e) => {
+                gamma = e.gamma || 0; // 좌우 기울기 (-90 ~ 90)
+                beta = e.beta || 0;   // 앞뒤 기울기
+            });
+
+            window.addEventListener('devicemotion', (e) => {
+                const accel = e.accelerationIncludingGravity;
+                if (!accel) return;
+                const totalAccel = Math.abs(accel.x) + Math.abs(accel.y) + Math.abs(accel.z);
+                const delta = Math.abs(totalAccel - prevAccel);
+                prevAccel = totalAccel;
+
+                if (delta > 15 && Date.now() - lastShakeTime > 300) {
+                    lastShakeTime = Date.now();
+                    if (currentStep === 1) {
+                        shakeCount++;
+                        progress = Math.min(1, shakeCount / 8);
+                        updateProgress();
+                    }
+                }
+            });
+        }
+
+        // 게임 루프
+        function gameLoop() {
+            if (!gameStarted) {
+                requestAnimationFrame(gameLoop);
+                return;
+            }
+
+            if (currentStep === 0) {
+                // 에스프레소: 오른쪽 기울이기 (gamma > 25)
+                if (gamma > 25) {
+                    progress = Math.min(1, progress + 0.005);
+                } else {
+                    // 기울이지 않으면 약간 감소 (유지해야 함)
+                    progress = Math.max(0, progress - 0.002);
+                }
+                espressoLayer.style.height = (progress * 25) + '%';
+                updateProgress();
+
+                if (progress >= 1) {
+                    nextStep();
+                }
+            } else if (currentStep === 1) {
+                // 얼음: 흔들기 (devicemotion에서 처리)
+                const iceCount = Math.floor(progress * 4);
+                ices.forEach((ice, i) => {
+                    if (i < iceCount) ice.classList.add('visible');
+                });
+
+                if (progress >= 1) {
+                    nextStep();
+                }
+            } else if (currentStep === 2) {
+                // 물: 왼쪽 기울이기 (gamma < -25)
+                if (gamma < -25) {
+                    progress = Math.min(1, progress + 0.004);
+                } else {
+                    progress = Math.max(0, progress - 0.001);
+                }
+                waterLayer.style.height = (25 + progress * 55) + '%';
+                updateProgress();
+
+                if (progress >= 1) {
+                    completeGame();
+                }
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function updateProgress() {
+            progressFill.style.width = (progress * 100) + '%';
+
+            // 색상 변경
+            if (currentStep === 0) progressFill.style.background = '#5c3317';
+            else if (currentStep === 1) progressFill.style.background = '#a8d8ea';
+            else progressFill.style.background = '#87ceeb';
+        }
+
+        function nextStep() {
+            currentStep++;
+            progress = 0;
+            shakeCount = 0;
+            progressFill.style.width = '0%';
+
+            dots.forEach((dot, i) => {
+                dot.classList.remove('active', 'done');
+                if (i < currentStep) dot.classList.add('done');
+                if (i === currentStep) dot.classList.add('active');
+            });
+
+            if (currentStep === 1) {
+                instrText.textContent = '위아래로 흔드세요';
+                instrSub.textContent = '얼음 추가';
+            } else if (currentStep === 2) {
+                instrText.textContent = '왼쪽으로 기울이세요';
+                instrSub.textContent = '물 채우기';
+            }
+        }
+
+        function completeGame() {
+            gameStarted = false;
+            completeScreen.classList.add('show');
+        }
+
+        // 다시 만들기
+        restartBtn.addEventListener('click', () => {
+            currentStep = 0;
+            progress = 0;
+            shakeCount = 0;
+            gameStarted = true;
+
+            espressoLayer.style.height = '0%';
+            waterLayer.style.height = '0%';
+            ices.forEach(ice => ice.classList.remove('visible'));
+            progressFill.style.width = '0%';
+            completeScreen.classList.remove('show');
+
+            dots.forEach((dot, i) => {
+                dot.classList.remove('active', 'done');
+                if (i === 0) dot.classList.add('active');
+            });
+
+            instrText.textContent = '오른쪽으로 기울이세요';
+            instrSub.textContent = '에스프레소 샷 추출';
+        });
+
+        gameLoop();
     </script>
 </body>
 </html>
