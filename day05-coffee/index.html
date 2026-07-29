@@ -168,6 +168,56 @@
             50% { opacity: 1; }
         }
 
+        /* 데스크탑 안내 */
+        .desktop-notice {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: #f5f0eb;
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .notice-box {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .notice-emoji {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .notice-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .notice-desc {
+            font-size: 1rem;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        .notice-url {
+            font-size: 0.85rem;
+            color: #00704a;
+            font-weight: 600;
+            background: #e8f5e9;
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+        }
+
+        @media (hover: hover) and (pointer: fine) {
+            .desktop-notice { display: flex; }
+        }
+
         /* 바닥 물기 */
         .puddle {
             position: fixed;
@@ -209,8 +259,18 @@
 
     <canvas id="spillCanvas"></canvas>
     <div class="puddle" id="puddle"></div>
-    <div class="hint">노트북을 좌우로 기울여보세요</div>
+    <div class="hint">폰을 좌우로 기울여서 커피를 쏟아보세요 (더블탭: 리필)</div>
     <div class="level-indicator" id="levelIndicator">Coffee: 100%</div>
+
+    <!-- 데스크탑 안내 -->
+    <div class="desktop-notice" id="desktopNotice">
+        <div class="notice-box">
+            <p class="notice-emoji">📱</p>
+            <p class="notice-title">모바일 전용 페이지입니다</p>
+            <p class="notice-desc">스마트폰으로 접속해서<br>기울여 보세요!</p>
+            <p class="notice-url">hyejunmoon.github.io/day05-coffee</p>
+        </div>
+    </div>
 
     <script>
         const cupBody = document.getElementById('cupBody');
@@ -237,20 +297,30 @@
         window.addEventListener('resize', resizeCanvases);
         resizeCanvases();
 
-        // 기울기 감지 - DeviceOrientation
-        window.addEventListener('deviceorientation', (e) => {
+        // iOS 자이로 권한 요청
+        if (typeof DeviceOrientationEvent !== 'undefined' &&
+            typeof DeviceOrientationEvent.requestPermission === 'function') {
+            // iOS 13+ 에서는 권한 요청 필요
+            document.body.addEventListener('click', function requestGyro() {
+                DeviceOrientationEvent.requestPermission().then(response => {
+                    if (response === 'granted') {
+                        window.addEventListener('deviceorientation', handleOrientation);
+                    }
+                });
+                document.body.removeEventListener('click', requestGyro);
+            }, { once: true });
+        } else {
+            window.addEventListener('deviceorientation', handleOrientation);
+        }
+
+        function handleOrientation(e) {
             if (e.gamma !== null) {
                 hasGyro = true;
                 tilt = Math.max(-1, Math.min(1, e.gamma / 40));
             }
-        });
+        }
 
-        // 마우스 폴백 (데스크탑)
-        document.addEventListener('mousemove', (e) => {
-            if (!hasGyro) {
-                tilt = (e.clientX / window.innerWidth - 0.5) * 2;
-            }
-        });
+        // 마우스 폴백 없음 — 모바일 전용
 
         // 커피 액체 그리기
         function drawLiquid() {
