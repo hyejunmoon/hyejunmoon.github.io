@@ -234,6 +234,8 @@
     <script type="module">
         import * as THREE from 'three';
         import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
+        import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
 
         // Three.js 씬 설정
         const scene = new THREE.Scene();
@@ -324,18 +326,8 @@
         waterMesh.position.set(0, 0.05, 0);
         scene.add(waterMesh);
 
-        // 얼음 큐브들
+        // 얼음 큐브들 (OBJ 모델)
         const iceCubes = [];
-        const iceGeo = new THREE.BoxGeometry(0.15, 0.15, 0.15);
-        const iceMat = new THREE.MeshPhysicalMaterial({
-            color: 0xd4f1f9,
-            metalness: 0,
-            roughness: 0.1,
-            transmission: 0.7,
-            transparent: true,
-            opacity: 0.6,
-        });
-
         const icePositions = [
             { x: -0.1, y: 0.8, z: 0.1, rx: 0.3, ry: 0.5 },
             { x: 0.12, y: 0.9, z: -0.05, rx: 0.7, ry: 0.2 },
@@ -343,13 +335,36 @@
             { x: -0.08, y: 1.1, z: -0.1, rx: 0.5, ry: 0.4 },
         ];
 
-        icePositions.forEach(pos => {
-            const cube = new THREE.Mesh(iceGeo, iceMat);
-            cube.position.set(pos.x, pos.y, pos.z);
-            cube.rotation.set(pos.rx, pos.ry, 0);
-            cube.visible = false;
-            scene.add(cube);
-            iceCubes.push(cube);
+        const mtlLoader = new MTLLoader();
+        mtlLoader.load('icecube.mtl', (materials) => {
+            materials.preload();
+            const objLoader = new OBJLoader();
+            objLoader.setMaterials(materials);
+            objLoader.load('icecube.obj', (obj) => {
+                // 얼음 재질을 반투명으로 덮어쓰기
+                obj.traverse((child) => {
+                    if (child.isMesh) {
+                        child.material = new THREE.MeshPhysicalMaterial({
+                            color: 0xd4f1f9,
+                            metalness: 0,
+                            roughness: 0.1,
+                            transmission: 0.7,
+                            transparent: true,
+                            opacity: 0.6,
+                        });
+                    }
+                });
+
+                icePositions.forEach(pos => {
+                    const clone = obj.clone();
+                    clone.scale.set(0.15, 0.15, 0.15);
+                    clone.position.set(pos.x, pos.y, pos.z);
+                    clone.rotation.set(pos.rx, pos.ry, 0);
+                    clone.visible = false;
+                    scene.add(clone);
+                    iceCubes.push(clone);
+                });
+            });
         });
 
         // 게임 로직
