@@ -290,6 +290,10 @@
                 }
             });
 
+            // 액체와 얼음을 유리잔의 자식으로 추가
+            glassModel.add(espressoMesh);
+            glassModel.add(waterMesh);
+
             scene.add(glassModel);
         });
 
@@ -306,7 +310,6 @@
         const espressoMesh = new THREE.Mesh(espressoGeo, espressoMat);
         espressoMesh.renderOrder = 1;
         espressoMesh.position.set(0, 0.05, 0);
-        scene.add(espressoMesh);
 
         // 물
         const waterGeo = new THREE.CylinderGeometry(0.35, 0.3, 0, 32);
@@ -322,7 +325,6 @@
         const waterMesh = new THREE.Mesh(waterGeo, waterMat);
         waterMesh.renderOrder = 2;
         waterMesh.position.set(0, 0.05, 0);
-        scene.add(waterMesh);
 
         // 얼음 큐브들 (OBJ 모델)
         const iceCubes = [];
@@ -359,7 +361,12 @@
                     clone.position.set(pos.x, pos.y, pos.z);
                     clone.rotation.set(pos.rx, pos.ry, 0);
                     clone.visible = false;
-                    scene.add(clone);
+                    // 유리잔이 로드되면 자식으로 추가, 아니면 씬에 추가
+                    if (glassModel) {
+                        glassModel.add(clone);
+                    } else {
+                        scene.add(clone);
+                    }
                     iceCubes.push(clone);
                 });
             });
