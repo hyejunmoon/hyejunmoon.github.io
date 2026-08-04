@@ -39,34 +39,50 @@
             transition: transform 0.05s;
         }
 
-        /* Kiro 공 */
+        /* Kiro 캐릭터 */
         .kiro {
             position: absolute;
             width: 80px;
             height: 80px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+            background: #fff;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.9rem;
-            font-weight: 700;
-            color: #fff;
-            letter-spacing: 0.05em;
-            box-shadow: 0 0 30px rgba(108, 92, 231, 0.4);
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
             user-select: none;
             transition: box-shadow 0.2s;
         }
 
         .kiro.scared {
-            box-shadow: 0 0 50px rgba(108, 92, 231, 0.8);
+            box-shadow: 0 0 50px rgba(255, 255, 255, 0.6);
+        }
+
+        .kiro-face {
+            display: flex;
+            gap: 14px;
+            align-items: center;
+            position: relative;
+        }
+
+        .kiro-eye {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #333;
+            transition: all 0.15s;
+        }
+
+        .kiro.scared .kiro-eye {
+            width: 12px;
+            height: 12px;
         }
 
         /* 궤적 */
         .trail {
             position: absolute;
             border-radius: 50%;
-            background: rgba(108, 92, 231, 0.3);
+            background: rgba(255, 255, 255, 0.2);
             pointer-events: none;
             animation: trailFade 0.6s ease-out forwards;
         }
@@ -183,7 +199,12 @@
 
     <div class="cursor" id="cursor">👆</div>
 
-    <div class="kiro" id="kiro">Kiro</div>
+    <div class="kiro" id="kiro">
+        <div class="kiro-face">
+            <div class="kiro-eye" id="eyeL"></div>
+            <div class="kiro-eye" id="eyeR"></div>
+        </div>
+    </div>
     <div class="speech" id="speech"></div>
 
     <div class="hint">Kiro를 잡아보세요</div>
@@ -328,6 +349,12 @@
                 createTrail(kiroX + 40, kiroY + 40);
                 lastTrailTime = now;
             }
+
+            // 눈이 마우스 방향을 쳐다봄
+            const eyeOffsetX = Math.max(-3, Math.min(3, dx * 0.02));
+            const eyeOffsetY = Math.max(-3, Math.min(3, dy * 0.02));
+            document.getElementById('eyeL').style.transform = `translate(${eyeOffsetX}px, ${eyeOffsetY}px)`;
+            document.getElementById('eyeR').style.transform = `translate(${eyeOffsetX}px, ${eyeOffsetY}px)`;
 
             requestAnimationFrame(update);
         }
