@@ -352,43 +352,55 @@
             '...한 번만 더 가까이 와봐',
         ];
 
-        // 장애물 생성
+        // 장애물 생성 + 충돌 데이터 저장
+        let obstacles = [];
+
         function createObstacles() {
-            // 기존 장애물 제거
             gameFrame.querySelectorAll('.obstacle-dot, .obstacle-line, .obstacle-rect').forEach(el => el.remove());
+            obstacles = [];
 
             const fw = frameDimensions.frameW;
             const fh = frameDimensions.frameH;
 
-            // 점 (4~7개)
+            // 점 (4~7개) — 충돌은 원형
             const dotCount = 4 + Math.floor(Math.random() * 4);
             for (let i = 0; i < dotCount; i++) {
                 const dot = document.createElement('div');
                 dot.className = 'obstacle-dot';
-                const size = 4 + Math.random() * 8;
+                const size = 6 + Math.random() * 10;
+                const ox = Math.random() * (fw - size);
+                const oy = Math.random() * (fh - size);
                 dot.style.width = size + 'px';
                 dot.style.height = size + 'px';
-                dot.style.left = (Math.random() * (fw - size)) + 'px';
-                dot.style.top = (Math.random() * (fh - size)) + 'px';
+                dot.style.left = ox + 'px';
+                dot.style.top = oy + 'px';
                 gameFrame.appendChild(dot);
+                obstacles.push({ type: 'circle', x: ox + size / 2, y: oy + size / 2, r: size / 2 + 40 });
             }
 
-            // 선 (2~4개)
+            // 선 (2~4개) — 충돌은 가로로 긴 직사각형으로 근사
             const lineCount = 2 + Math.floor(Math.random() * 3);
             for (let i = 0; i < lineCount; i++) {
                 const line = document.createElement('div');
                 line.className = 'obstacle-line';
                 const length = 40 + Math.random() * 100;
                 const angle = Math.random() * 360;
+                const ox = Math.random() * (fw - 50);
+                const oy = Math.random() * (fh - 50);
                 line.style.width = length + 'px';
-                line.style.height = '1.5px';
-                line.style.left = (Math.random() * (fw - 50)) + 'px';
-                line.style.top = (Math.random() * (fh - 50)) + 'px';
+                line.style.height = '2px';
+                line.style.left = ox + 'px';
+                line.style.top = oy + 'px';
                 line.style.transform = `rotate(${angle}deg)`;
                 gameFrame.appendChild(line);
+                // 충돌은 중심점 원으로 근사
+                const rad = angle * Math.PI / 180;
+                const cx = ox + Math.cos(rad) * length / 2;
+                const cy = oy + Math.sin(rad) * length / 2;
+                obstacles.push({ type: 'circle', x: cx, y: cy, r: length / 2 + 20 });
             }
 
-            // 면 (1~3개)
+            // 면 (1~3개) — 충돌은 AABB 직사각형
             const rectCount = 1 + Math.floor(Math.random() * 3);
             for (let i = 0; i < rectCount; i++) {
                 const rect = document.createElement('div');
@@ -396,13 +408,72 @@
                 const rw = 30 + Math.random() * 80;
                 const rh = 30 + Math.random() * 60;
                 const angle = (Math.random() - 0.5) * 30;
+                const ox = Math.random() * (fw - rw);
+                const oy = Math.random() * (fh - rh);
                 rect.style.width = rw + 'px';
                 rect.style.height = rh + 'px';
-                rect.style.left = (Math.random() * (fw - rw)) + 'px';
-                rect.style.top = (Math.random() * (fh - rh)) + 'px';
+                rect.style.left = ox + 'px';
+                rect.style.top = oy + 'px';
                 rect.style.transform = `rotate(${angle}deg)`;
                 gameFrame.appendChild(rect);
+                obstacles.push({ type: 'rect', x: ox, y: oy, w: rw, h: rh });
             }
+        }
+
+        // Kiro ↔ 장애물 충돌 체크
+        function collideWithObstacles() {
+            const kCX = kiroX + 40;
+            const kCY = kiroY + 40;
+            const kR = 40;
+
+            obstacles.forEach(ob => {
+                if (ob.type === 'circle') {
+                    const dx = kCX - ob.x;
+                    const dy = kCY - ob.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    const minDist = kR + (ob.r - 40) + 5; // 실제 장애물 반경
+                    if (dist < minDist && dist > 0) {
+                        const overlap = minDist - dist;
+                        const nx = dx / dist;
+                        const ny = dy / dist;
+                        kiroX += nx * overlap;
+                        kiroY += ny * overlap;
+                        // 반사
+                        const dot = kiroVX * nx + kiroVY * ny;
+                        kiroVX -= 1.5 * dot * nx;
+                        kiroVY -= 1.5 * dot * ny;
+                    }
+                } else if (ob.type === 'rect') {
+                    const closestX = Math.max(ob.x, Math.min(kCX, ob.x + ob.w));
+                    const closestY = Math.max(ob.y, Math.min(kCY, ob.y + ob.h));
+                    const dx = kCX - closestX;
+                    const dy = kCY - closestY;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < kR && dist > 0) {
+                        const overlap = kR - dist;
+                        const nx = dx / dist;
+                        const ny = dy / dist;
+                        kiroX += nx * overlap;
+                        kiroY += ny * overlap;
+                        const dot = kiroVX * nx + kiroVY * ny;
+                        kiroVX -= 1.5 * dot * nx;
+                        kiroVY -= 1.5 * dot * ny;
+                    }
+                }
+            });
+        }
+
+        // 마우스도 장애물에 막힘 체크 — 마우스 위치를 장애물 밖으로 보정
+        function isMouseBlocked() {
+            obstacles.forEach(ob => {
+                if (ob.type === 'rect') {
+                    if (mouseX > ob.x && mouseX < ob.x + ob.w && mouseY > ob.y && mouseY < ob.y + ob.h) {
+                        // 마우스가 면 장애물 안에 있으면 무력화
+                        mouseX = -1000;
+                        mouseY = -1000;
+                    }
+                }
+            });
         }
 
         createObstacles();
@@ -491,6 +562,10 @@
             kiroX += kiroVX;
             kiroY += kiroVY;
 
+            // 장애물 충돌
+            collideWithObstacles();
+            isMouseBlocked();
+
             const w = frameDimensions.frameW - 80;
             const h = frameDimensions.frameH - 80;
 
@@ -547,15 +622,11 @@
             }, 2000);
         }
 
-        // 분신술
+        // 분신술 — 원본 키로 위치에서 생성
         function spawnClone() {
-            const fw = frameDimensions.frameW;
-            const fh = frameDimensions.frameH;
-
             const clone = document.createElement('div');
             clone.className = 'clone';
 
-            // 랜덤 눈 타입 선택
             const eyeType = eyeTypes[Math.floor(Math.random() * eyeTypes.length)];
 
             clone.innerHTML = `
@@ -565,10 +636,25 @@
                 </div>
             `;
 
-            clone.style.left = (Math.random() * (fw - 80)) + 'px';
-            clone.style.top = (Math.random() * (fh - 80)) + 'px';
+            // 원본 키로 위치에서 시작
+            let cloneX = kiroX;
+            let cloneY = kiroY;
+            clone.style.left = cloneX + 'px';
+            clone.style.top = cloneY + 'px';
 
-            // 가짜 클릭하면 attempts만 증가 + 분신 사라짐
+            // 랜덤 방향으로 튀어나감
+            const spreadAngle = Math.random() * Math.PI * 2;
+            const spreadDist = 80 + Math.random() * 100;
+            const targetX = Math.max(0, Math.min(frameDimensions.frameW - 80, cloneX + Math.cos(spreadAngle) * spreadDist));
+            const targetY = Math.max(0, Math.min(frameDimensions.frameH - 80, cloneY + Math.sin(spreadAngle) * spreadDist));
+
+            // 튀어나가는 애니메이션
+            setTimeout(() => {
+                clone.style.transition = 'left 0.4s cubic-bezier(0.25,0.46,0.45,0.94), top 0.4s cubic-bezier(0.25,0.46,0.45,0.94)';
+                clone.style.left = targetX + 'px';
+                clone.style.top = targetY + 'px';
+            }, 10);
+
             clone.addEventListener('click', (e) => {
                 e.stopPropagation();
                 attempts++;
@@ -581,7 +667,6 @@
             gameFrame.appendChild(clone);
             clones.push(clone);
 
-            // 일정 시간 후 자동 소멸
             setTimeout(() => {
                 if (clone.parentNode) {
                     clone.style.animation = 'cloneDisappear 0.3s ease forwards';
