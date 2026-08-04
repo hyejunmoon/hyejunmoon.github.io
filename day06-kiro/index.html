@@ -510,6 +510,8 @@
         });
 
         // 클릭 시 잡기 시도
+        let lastCatchTime = 0;
+
         document.addEventListener('click', (e) => {
             if (caught) return;
             attempts++;
@@ -520,10 +522,24 @@
             const dist = Math.sqrt(dx * dx + dy * dy);
 
             if (dist < 50) {
+                const now = Date.now();
+                // 연속 클릭 방지 — 이전 잡기 후 1.5초 쿨타임
+                if (now - lastCatchTime < 1500) return;
+
                 catchCount++;
+                lastCatchTime = now;
+
+                // 잡힐 때 슝- 하고 날아감
+                const fleeAngle = Math.atan2(dy, dx);
+                kiroVX = -Math.cos(fleeAngle) * 30;
+                kiroVY = -Math.sin(fleeAngle) * 30;
+
                 if (catchCount >= 3) {
-                    caught = true;
-                    caughtOverlay.classList.add('show');
+                    // 마지막 날아간 후 잡힘
+                    setTimeout(() => {
+                        caught = true;
+                        caughtOverlay.classList.add('show');
+                    }, 600);
                 }
             }
         });
