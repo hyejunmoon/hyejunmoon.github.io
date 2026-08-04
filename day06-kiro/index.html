@@ -13,6 +13,17 @@
             min-height: 100vh;
             cursor: none;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .game-frame {
+            position: relative;
+            background: #0f0f0f;
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            overflow: hidden;
         }
 
         .back-link {
@@ -199,13 +210,15 @@
 
     <div class="cursor" id="cursor">👆</div>
 
-    <div class="kiro" id="kiro">
-        <div class="kiro-face">
-            <div class="kiro-eye" id="eyeL"></div>
-            <div class="kiro-eye" id="eyeR"></div>
+    <div class="game-frame" id="gameFrame">
+        <div class="kiro" id="kiro">
+            <div class="kiro-face">
+                <div class="kiro-eye" id="eyeL"></div>
+                <div class="kiro-eye" id="eyeR"></div>
+            </div>
         </div>
+        <div class="speech" id="speech"></div>
     </div>
-    <div class="speech" id="speech"></div>
 
     <div class="hint">Kiro를 잡아보세요</div>
     <div class="counter" id="counter">attempts: 0</div>
@@ -223,11 +236,29 @@
         const counter = document.getElementById('counter');
         const caughtOverlay = document.getElementById('caughtOverlay');
         const retryBtn = document.getElementById('retryBtn');
+        const gameFrame = document.getElementById('gameFrame');
 
-        let mouseX = window.innerWidth / 2;
-        let mouseY = window.innerHeight / 2;
-        let kiroX = window.innerWidth / 2 - 40;
-        let kiroY = window.innerHeight / 2 - 40;
+        // 랜덤 크기와 각도 설정
+        function randomizeFrame() {
+            const vw = window.innerWidth;
+            const vh = window.innerHeight;
+            const frameW = Math.floor(200 + Math.random() * (vw * 0.5));
+            const frameH = Math.floor(200 + Math.random() * (vh * 0.5));
+            const rotation = (Math.random() - 0.5) * 12; // -6 ~ 6도
+
+            gameFrame.style.width = frameW + 'px';
+            gameFrame.style.height = frameH + 'px';
+            gameFrame.style.transform = `rotate(${rotation}deg)`;
+
+            return { frameW, frameH };
+        }
+
+        let frameDimensions = randomizeFrame();
+
+        let mouseX = frameDimensions.frameW / 2;
+        let mouseY = frameDimensions.frameH / 2;
+        let kiroX = frameDimensions.frameW / 2 - 40;
+        let kiroY = frameDimensions.frameH / 2 - 40;
         let kiroVX = 0;
         let kiroVY = 0;
         let attempts = 0;
@@ -253,18 +284,23 @@
 
         // 커서 따라다니기
         document.addEventListener('mousemove', (e) => {
-            mouseX = e.clientX;
-            mouseY = e.clientY;
-            cursor.style.left = mouseX + 'px';
-            cursor.style.top = mouseY + 'px';
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+
+            // 게임 프레임 내 좌표로 변환
+            const rect = gameFrame.getBoundingClientRect();
+            mouseX = e.clientX - rect.left;
+            mouseY = e.clientY - rect.top;
         });
 
         // 터치 지원
         document.addEventListener('touchmove', (e) => {
-            mouseX = e.touches[0].clientX;
-            mouseY = e.touches[0].clientY;
-            cursor.style.left = mouseX + 'px';
-            cursor.style.top = mouseY + 'px';
+            cursor.style.left = e.touches[0].clientX + 'px';
+            cursor.style.top = e.touches[0].clientY + 'px';
+
+            const rect = gameFrame.getBoundingClientRect();
+            mouseX = e.touches[0].clientX - rect.left;
+            mouseY = e.touches[0].clientY - rect.top;
         });
 
         // 클릭 시 잡기 시도
@@ -327,9 +363,9 @@
             kiroX += kiroVX;
             kiroY += kiroVY;
 
-            // 벽 바운스 (탱탱볼)
-            const w = window.innerWidth - 80;
-            const h = window.innerHeight - 80;
+            // 벽 바운스 (탱탱볼) — 프레임 기준
+            const w = frameDimensions.frameW - 80;
+            const h = frameDimensions.frameH - 80;
 
             if (kiroX < 0) { kiroX = 0; kiroVX *= -0.8; }
             if (kiroX > w) { kiroX = w; kiroVX *= -0.8; }
@@ -366,7 +402,7 @@
             trail.style.top = (y - 10) + 'px';
             trail.style.width = '20px';
             trail.style.height = '20px';
-            document.body.appendChild(trail);
+            gameFrame.appendChild(trail);
             setTimeout(() => trail.remove(), 600);
         }
 
@@ -388,8 +424,12 @@
             attempts = 0;
             counter.textContent = 'attempts: 0';
             caughtOverlay.classList.remove('show');
-            kiroX = Math.random() * (window.innerWidth - 80);
-            kiroY = Math.random() * (window.innerHeight - 80);
+
+            // 새로운 랜덤 프레임
+            frameDimensions = randomizeFrame();
+
+            kiroX = Math.random() * (frameDimensions.frameW - 80);
+            kiroY = Math.random() * (frameDimensions.frameH - 80);
             kiroVX = 0;
             kiroVY = 0;
         });
