@@ -15,6 +15,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            cursor: default;
         }
 
         .game-frame {
@@ -49,6 +50,7 @@
             user-select: none;
             transition: box-shadow 0.2s;
             z-index: 10;
+            cursor: pointer;
         }
 
         .kiro.scared {
@@ -128,14 +130,12 @@
             position: absolute;
             border-radius: 50%;
             background: rgba(255, 255, 255, 0.6);
-            pointer-events: none;
         }
 
         /* 장애물 — 선 */
         .obstacle-line {
             position: absolute;
             background: rgba(255, 255, 255, 0.4);
-            pointer-events: none;
             transform-origin: left center;
         }
 
@@ -144,7 +144,6 @@
             position: absolute;
             background: rgba(255, 255, 255, 0.08);
             border: 1px solid rgba(255, 255, 255, 0.2);
-            pointer-events: none;
         }
 
         /* 분신 — 가짜 Kiro */
@@ -161,7 +160,7 @@
             user-select: none;
             z-index: 9;
             animation: cloneAppear 0.3s ease-out;
-            cursor: default;
+            cursor: pointer;
         }
 
         @keyframes cloneAppear {
