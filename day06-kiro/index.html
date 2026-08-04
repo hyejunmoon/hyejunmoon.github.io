@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 06 — Catch Kiro | hyejunmoon</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            overflow: hidden;
+            background: #0f0f0f;
+            min-height: 100vh;
+            cursor: none;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        .back-link {
+            position: fixed;
+            top: 1.5rem;
+            left: 1.5rem;
+            color: rgba(255,255,255,0.3);
+            text-decoration: none;
+            font-size: 0.9rem;
+            z-index: 200;
+            transition: color 0.2s;
+        }
+        .back-link:hover { color: rgba(255,255,255,0.7); }
+
+        /* 커스텀 커서 (손) */
+        .cursor {
+            position: fixed;
+            width: 40px;
+            height: 40px;
+            pointer-events: none;
+            z-index: 1000;
+            transform: translate(-50%, -50%);
+            font-size: 1.8rem;
+            transition: transform 0.05s;
+        }
+
+        /* Kiro 공 */
+        .kiro {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: 0.05em;
+            box-shadow: 0 0 30px rgba(108, 92, 231, 0.4);
+            user-select: none;
+            transition: box-shadow 0.2s;
+        }
+
+        .kiro.scared {
+            box-shadow: 0 0 50px rgba(108, 92, 231, 0.8);
+        }
+
+        /* 궤적 */
+        .trail {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(108, 92, 231, 0.3);
+            pointer-events: none;
+            animation: trailFade 0.6s ease-out forwards;
+        }
+
+        @keyframes trailFade {
+            0% { transform: scale(1); opacity: 0.5; }
+            100% { transform: scale(0.2); opacity: 0; }
+        }
+
+        /* 말풍선 */
+        .speech {
+            position: absolute;
+            background: rgba(255,255,255,0.95);
+            color: #333;
+            padding: 0.5rem 0.8rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: opacity 0.3s, transform 0.3s;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .speech.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .speech::after {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-top: 6px solid rgba(255,255,255,0.95);
+        }
+
+        /* 안내 */
+        .hint {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255,255,255,0.25);
+            font-size: 0.8rem;
+            text-align: center;
+            pointer-events: none;
+        }
+
+        /* 잡혔을 때 */
+        .caught-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            background: rgba(0,0,0,0.7);
+            z-index: 500;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .caught-overlay.show { display: flex; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .caught-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 0.5rem;
+        }
+
+        .caught-sub {
+            font-size: 0.9rem;
+            color: #aaa;
+            margin-bottom: 1.5rem;
+        }
+
+        .retry-btn {
+            background: #6c5ce7;
+            color: #fff;
+            border: none;
+            padding: 0.7rem 1.5rem;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* 카운터 */
+        .counter {
+            position: fixed;
+            top: 1.5rem;
+            right: 1.5rem;
+            color: rgba(255,255,255,0.4);
+            font-size: 0.8rem;
+            font-family: monospace;
+            z-index: 200;
+        }
+    </style>
+</head>
+<body>
+    <a href="/" class="back-link">&larr; Home</a>
+
+    <div class="cursor" id="cursor">👆</div>
+
+    <div class="kiro" id="kiro">Kiro</div>
+    <div class="speech" id="speech"></div>
+
+    <div class="hint">Kiro를 잡아보세요</div>
+    <div class="counter" id="counter">attempts: 0</div>
+
+    <div class="caught-overlay" id="caughtOverlay">
+        <p class="caught-text">잡았다!</p>
+        <p class="caught-sub">드디어... 어색한 사이가 끝났네요</p>
+        <button class="retry-btn" id="retryBtn">다시 도망가기</button>
+    </div>
+
+    <script>
+        const cursor = document.getElementById('cursor');
+        const kiro = document.getElementById('kiro');
+        const speech = document.getElementById('speech');
+        const counter = document.getElementById('counter');
+        const caughtOverlay = document.getElementById('caughtOverlay');
+        const retryBtn = document.getElementById('retryBtn');
+
+        let mouseX = window.innerWidth / 2;
+        let mouseY = window.innerHeight / 2;
+        let kiroX = window.innerWidth / 2 - 40;
+        let kiroY = window.innerHeight / 2 - 40;
+        let kiroVX = 0;
+        let kiroVY = 0;
+        let attempts = 0;
+        let caught = false;
+        let lastTrailTime = 0;
+        let speechTimeout = null;
+        let catchCount = 0; // 잡히기 위한 근접 횟수
+
+        const speeches = [
+            '가까이 오지 마...',
+            '아직 준비가 안 됐어',
+            '왜 자꾸 따라와...',
+            '우리 그런 사이 아니잖아',
+            '조금만 더 거리를...',
+            '심장이 뛰잖아',
+            '너무 빠르다...',
+            '잡히면 안 되는데...',
+            '이러면 곤란한데',
+            '나 도망가는 거 맞지...?',
+            '사실 잡히고 싶을지도',
+            '...한 번만 더 가까이 와봐',
+        ];
+
+        // 커서 따라다니기
+        document.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+            cursor.style.left = mouseX + 'px';
+            cursor.style.top = mouseY + 'px';
+        });
+
+        // 터치 지원
+        document.addEventListener('touchmove', (e) => {
+            mouseX = e.touches[0].clientX;
+            mouseY = e.touches[0].clientY;
+            cursor.style.left = mouseX + 'px';
+            cursor.style.top = mouseY + 'px';
+        });
+
+        // 클릭 시 잡기 시도
+        document.addEventListener('click', (e) => {
+            if (caught) return;
+            attempts++;
+            counter.textContent = `attempts: ${attempts}`;
+
+            const dx = mouseX - (kiroX + 40);
+            const dy = mouseY - (kiroY + 40);
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            if (dist < 50) {
+                catchCount++;
+                if (catchCount >= 3) {
+                    // 잡힘!
+                    caught = true;
+                    caughtOverlay.classList.add('show');
+                }
+            }
+        });
+
+        // 물리 시뮬레이션
+        function update() {
+            if (caught) {
+                requestAnimationFrame(update);
+                return;
+            }
+
+            const dx = mouseX - (kiroX + 40);
+            const dy = mouseY - (kiroY + 40);
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            // 마우스에서 도망가는 힘
+            const fleeRadius = 200;
+            if (dist < fleeRadius) {
+                const force = (1 - dist / fleeRadius) * 15;
+                const angle = Math.atan2(dy, dx);
+                kiroVX -= Math.cos(angle) * force;
+                kiroVY -= Math.sin(angle) * force;
+
+                kiro.classList.add('scared');
+
+                // 말풍선
+                if (dist < 120 && Math.random() > 0.97) {
+                    showSpeech();
+                }
+            } else {
+                kiro.classList.remove('scared');
+            }
+
+            // 점점 잡히기 쉬워짐 (attempts 많으면 속도 감소)
+            const slowFactor = Math.max(0.85, 0.98 - attempts * 0.001);
+
+            // 마찰
+            kiroVX *= slowFactor;
+            kiroVY *= slowFactor;
+
+            // 위치 업데이트
+            kiroX += kiroVX;
+            kiroY += kiroVY;
+
+            // 벽 바운스 (탱탱볼)
+            const w = window.innerWidth - 80;
+            const h = window.innerHeight - 80;
+
+            if (kiroX < 0) { kiroX = 0; kiroVX *= -0.8; }
+            if (kiroX > w) { kiroX = w; kiroVX *= -0.8; }
+            if (kiroY < 0) { kiroY = 0; kiroVY *= -0.8; }
+            if (kiroY > h) { kiroY = h; kiroVY *= -0.8; }
+
+            kiro.style.left = kiroX + 'px';
+            kiro.style.top = kiroY + 'px';
+
+            // 말풍선 위치
+            speech.style.left = (kiroX + 40) + 'px';
+            speech.style.top = (kiroY - 30) + 'px';
+
+            // 궤적
+            const now = Date.now();
+            if (now - lastTrailTime > 50 && (Math.abs(kiroVX) > 2 || Math.abs(kiroVY) > 2)) {
+                createTrail(kiroX + 40, kiroY + 40);
+                lastTrailTime = now;
+            }
+
+            requestAnimationFrame(update);
+        }
+
+        function createTrail(x, y) {
+            const trail = document.createElement('div');
+            trail.className = 'trail';
+            trail.style.left = (x - 10) + 'px';
+            trail.style.top = (y - 10) + 'px';
+            trail.style.width = '20px';
+            trail.style.height = '20px';
+            document.body.appendChild(trail);
+            setTimeout(() => trail.remove(), 600);
+        }
+
+        function showSpeech() {
+            if (speechTimeout) return;
+            const msg = speeches[Math.floor(Math.random() * speeches.length)];
+            speech.textContent = msg;
+            speech.classList.add('show');
+            speechTimeout = setTimeout(() => {
+                speech.classList.remove('show');
+                speechTimeout = null;
+            }, 2000);
+        }
+
+        // 다시 하기
+        retryBtn.addEventListener('click', () => {
+            caught = false;
+            catchCount = 0;
+            attempts = 0;
+            counter.textContent = 'attempts: 0';
+            caughtOverlay.classList.remove('show');
+            kiroX = Math.random() * (window.innerWidth - 80);
+            kiroY = Math.random() * (window.innerHeight - 80);
+            kiroVX = 0;
+            kiroVY = 0;
+        });
+
+        update();
+    </script>
+</body>
+</html>
