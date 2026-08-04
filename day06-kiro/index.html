@@ -305,6 +305,22 @@
             gameFrame.style.height = frameH + 'px';
             gameFrame.style.transform = `rotate(${rotation}deg)`;
 
+            // 작은 프레임이면 더 빨리 바뀌도록 타이머 설정
+            const area = frameW * frameH;
+            const threshold = (vw * 0.35) * (vh * 0.35);
+            if (area < threshold) {
+                setTimeout(() => {
+                    if (!caught) {
+                        frameDimensions = randomizeFrame();
+                        kiroX = Math.min(kiroX, frameDimensions.frameW - 80);
+                        kiroY = Math.min(kiroY, frameDimensions.frameH - 80);
+                        kiroX = Math.max(0, kiroX);
+                        kiroY = Math.max(0, kiroY);
+                        createObstacles();
+                    }
+                }, 1500 + Math.random() * 1000);
+            }
+
             return { frameW, frameH };
         }
 
@@ -533,6 +549,16 @@
                 const fleeAngle = Math.atan2(dy, dx);
                 kiroVX = -Math.cos(fleeAngle) * 30;
                 kiroVY = -Math.sin(fleeAngle) * 30;
+
+                // 잡힐 때마다 프레임 구조 변경
+                setTimeout(() => {
+                    frameDimensions = randomizeFrame();
+                    kiroX = Math.min(kiroX, frameDimensions.frameW - 80);
+                    kiroY = Math.min(kiroY, frameDimensions.frameH - 80);
+                    kiroX = Math.max(0, kiroX);
+                    kiroY = Math.max(0, kiroY);
+                    createObstacles();
+                }, 300);
 
                 if (catchCount >= 3) {
                     // 마지막 날아간 후 잡힘
