@@ -639,6 +639,9 @@
             document.getElementById('eyeL').style.transform = `translate(${eyeOffsetX}px, ${eyeOffsetY}px)`;
             document.getElementById('eyeR').style.transform = `translate(${eyeOffsetX}px, ${eyeOffsetY}px)`;
 
+            // 분신 움직임 업데이트
+            updateClones();
+
             requestAnimationFrame(update);
         }
 
@@ -664,7 +667,7 @@
             }, 2000);
         }
 
-        // 분신술 — 원본 키로 위치에서 생성
+        // 분신술 — 원본 키로 위치에서 생성 + 자유롭게 움직임
         function spawnClone() {
             const clone = document.createElement('div');
             clone.className = 'clone';
@@ -679,23 +682,17 @@
             `;
 
             // 원본 키로 위치에서 시작
-            let cloneX = kiroX;
-            let cloneY = kiroY;
-            clone.style.left = cloneX + 'px';
-            clone.style.top = cloneY + 'px';
-
-            // 랜덤 방향으로 튀어나감
             const spreadAngle = Math.random() * Math.PI * 2;
-            const spreadDist = 80 + Math.random() * 100;
-            const targetX = Math.max(0, Math.min(frameDimensions.frameW - 80, cloneX + Math.cos(spreadAngle) * spreadDist));
-            const targetY = Math.max(0, Math.min(frameDimensions.frameH - 80, cloneY + Math.sin(spreadAngle) * spreadDist));
+            const cloneData = {
+                el: clone,
+                x: kiroX,
+                y: kiroY,
+                vx: Math.cos(spreadAngle) * (5 + Math.random() * 8),
+                vy: Math.sin(spreadAngle) * (5 + Math.random() * 8),
+            };
 
-            // 튀어나가는 애니메이션
-            setTimeout(() => {
-                clone.style.transition = 'left 0.4s cubic-bezier(0.25,0.46,0.45,0.94), top 0.4s cubic-bezier(0.25,0.46,0.45,0.94)';
-                clone.style.left = targetX + 'px';
-                clone.style.top = targetY + 'px';
-            }, 10);
+            clone.style.left = cloneData.x + 'px';
+            clone.style.top = cloneData.y + 'px';
 
             clone.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -703,19 +700,49 @@
                 counter.textContent = `attempts: ${attempts}`;
                 clone.style.animation = 'cloneDisappear 0.2s ease forwards';
                 setTimeout(() => clone.remove(), 200);
-                clones = clones.filter(c => c !== clone);
+                clones = clones.filter(c => c !== cloneData);
             });
 
             gameFrame.appendChild(clone);
-            clones.push(clone);
+            clones.push(cloneData);
 
+            // 자동 소멸
             setTimeout(() => {
                 if (clone.parentNode) {
                     clone.style.animation = 'cloneDisappear 0.3s ease forwards';
                     setTimeout(() => clone.remove(), 300);
-                    clones = clones.filter(c => c !== clone);
+                    clones = clones.filter(c => c !== cloneData);
                 }
-            }, 3000 + Math.random() * 2000);
+            }, 4000 + Math.random() * 3000);
+        }
+
+        // 분신 물리 업데이트
+        function updateClones() {
+            const w = frameDimensions.frameW - 80;
+            const h = frameDimensions.frameH - 80;
+
+            clones.forEach(c => {
+                c.vx *= 0.98;
+                c.vy *= 0.98;
+
+                // 랜덤 방향 전환
+                if (Math.random() > 0.97) {
+                    c.vx += (Math.random() - 0.5) * 6;
+                    c.vy += (Math.random() - 0.5) * 6;
+                }
+
+                c.x += c.vx;
+                c.y += c.vy;
+
+                // 벽 바운스
+                if (c.x < 0) { c.x = 0; c.vx *= -1; }
+                if (c.x > w) { c.x = w; c.vx *= -1; }
+                if (c.y < 0) { c.y = 0; c.vy *= -1; }
+                if (c.y > h) { c.y = h; c.vy *= -1; }
+
+                c.el.style.left = c.x + 'px';
+                c.el.style.top = c.y + 'px';
+            });
         }
 
         // 주기적으로 분신 생성 (3~6초마다)
@@ -741,7 +768,7 @@
             caughtOverlay.classList.remove('show');
 
             // 분신 제거
-            clones.forEach(c => c.remove());
+            clones.forEach(c => c.el.remove());
             clones = [];
             if (cloneTimer) clearTimeout(cloneTimer);
 
