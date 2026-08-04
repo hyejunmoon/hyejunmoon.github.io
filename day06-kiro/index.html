@@ -407,6 +407,23 @@
 
         createObstacles();
 
+        // 5~10초마다 프레임 크기/각도 랜덤 변경
+        function scheduleFrameChange() {
+            const delay = 5000 + Math.random() * 5000;
+            setTimeout(() => {
+                if (!caught) {
+                    frameDimensions = randomizeFrame();
+                    kiroX = Math.min(kiroX, frameDimensions.frameW - 80);
+                    kiroY = Math.min(kiroY, frameDimensions.frameH - 80);
+                    kiroX = Math.max(0, kiroX);
+                    kiroY = Math.max(0, kiroY);
+                    createObstacles();
+                }
+                scheduleFrameChange();
+            }, delay);
+        }
+        scheduleFrameChange();
+
         // 마우스
         document.addEventListener('mousemove', (e) => {
             const rect = gameFrame.getBoundingClientRect();
