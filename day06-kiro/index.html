@@ -277,11 +277,11 @@
 
     <div class="speech" id="speech"></div>
     <div class="hint">Kiro를 잡아보세요</div>
-    <div class="counter" id="counter">attempts: 0</div>
+    <div class="counter" id="counter">catch: 0/5 · attempts: 0</div>
 
     <div class="caught-overlay" id="caughtOverlay">
-        <p class="caught-text">잡았다!</p>
-        <p class="caught-sub">드디어... 어색한 사이가 끝났네요</p>
+        <p class="caught-text">이제 우리 친구야!</p>
+        <p class="caught-sub">Kiro와 완벽히 친해졌습니다</p>
         <button class="retry-btn" id="retryBtn">다시 도망가기</button>
     </div>
 
@@ -531,7 +531,7 @@
         document.addEventListener('click', (e) => {
             if (caught) return;
             attempts++;
-            counter.textContent = `attempts: ${attempts}`;
+            counter.textContent = `catch: ${catchCount}/5 · attempts: ${attempts}`;
 
             const dx = mouseX - (kiroX + 40);
             const dy = mouseY - (kiroY + 40);
@@ -544,6 +544,20 @@
 
                 catchCount++;
                 lastCatchTime = now;
+
+                // 단계별 말풍선
+                const catchMessages = [
+                    '...!',
+                    '왜 이렇게 빠른 거야',
+                    '인정할게, 좀 잘하네',
+                    '거의 다 됐어...',
+                    '',
+                ];
+                if (catchCount <= 5 && catchMessages[catchCount - 1]) {
+                    speech.textContent = catchMessages[catchCount - 1];
+                    speech.classList.add('show');
+                    setTimeout(() => speech.classList.remove('show'), 1500);
+                }
 
                 // 잡힐 때 슝- 하고 날아감
                 const fleeAngle = Math.atan2(dy, dx);
@@ -560,10 +574,12 @@
                     createObstacles();
                 }, 300);
 
-                if (catchCount >= 3) {
-                    // 마지막 날아간 후 잡힘
+                if (catchCount >= 5) {
+                    // 완전히 친해짐!
                     setTimeout(() => {
                         caught = true;
+                        document.querySelector('.caught-text').textContent = '이제 우리 친구야!';
+                        document.querySelector('.caught-sub').textContent = 'Kiro와 완벽히 친해졌습니다';
                         caughtOverlay.classList.add('show');
                     }, 600);
                 }
@@ -697,7 +713,7 @@
             clone.addEventListener('click', (e) => {
                 e.stopPropagation();
                 attempts++;
-                counter.textContent = `attempts: ${attempts}`;
+                counter.textContent = `catch: ${catchCount}/5 · attempts: ${attempts}`;
                 clone.style.animation = 'cloneDisappear 0.2s ease forwards';
                 setTimeout(() => clone.remove(), 200);
                 clones = clones.filter(c => c !== cloneData);
