@@ -11,7 +11,6 @@
             overflow: hidden;
             background: #0f0f0f;
             min-height: 100vh;
-            cursor: none;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             display: flex;
             align-items: center;
@@ -23,7 +22,6 @@
             background: #0f0f0f;
             border: 2px solid rgba(255,255,255,0.1);
             border-radius: 8px;
-            overflow: hidden;
         }
 
         .back-link {
@@ -38,18 +36,6 @@
         }
         .back-link:hover { color: rgba(255,255,255,0.7); }
 
-        /* 커스텀 커서 (손) */
-        .cursor {
-            position: fixed;
-            width: 40px;
-            height: 40px;
-            pointer-events: none;
-            z-index: 1000;
-            transform: translate(-50%, -50%);
-            font-size: 1.8rem;
-            transition: transform 0.05s;
-        }
-
         /* Kiro 캐릭터 */
         .kiro {
             position: absolute;
@@ -63,6 +49,7 @@
             box-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
             user-select: none;
             transition: box-shadow 0.2s;
+            z-index: 10;
         }
 
         .kiro.scared {
@@ -103,9 +90,9 @@
             100% { transform: scale(0.2); opacity: 0; }
         }
 
-        /* 말풍선 */
+        /* 말풍선 — 프레임 밖으로 나올 수 있게 fixed */
         .speech {
-            position: absolute;
+            position: fixed;
             background: rgba(255,255,255,0.95);
             color: #333;
             padding: 0.5rem 0.8rem;
@@ -115,14 +102,15 @@
             white-space: nowrap;
             pointer-events: none;
             opacity: 0;
-            transform: translateY(-10px);
+            transform: translateX(-50%) translateY(-10px);
             transition: opacity 0.3s, transform 0.3s;
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 999;
         }
 
         .speech.show {
             opacity: 1;
-            transform: translateY(0);
+            transform: translateX(-50%) translateY(0);
         }
 
         .speech::after {
@@ -134,6 +122,30 @@
             border-left: 6px solid transparent;
             border-right: 6px solid transparent;
             border-top: 6px solid rgba(255,255,255,0.95);
+        }
+
+        /* 장애물 — 점 */
+        .obstacle-dot {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.6);
+            pointer-events: none;
+        }
+
+        /* 장애물 — 선 */
+        .obstacle-line {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.4);
+            pointer-events: none;
+            transform-origin: left center;
+        }
+
+        /* 장애물 — 면 */
+        .obstacle-rect {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            pointer-events: none;
         }
 
         /* 안내 */
@@ -208,8 +220,6 @@
 <body>
     <a href="/" class="back-link">&larr; Home</a>
 
-    <div class="cursor" id="cursor">👆</div>
-
     <div class="game-frame" id="gameFrame">
         <div class="kiro" id="kiro">
             <div class="kiro-face">
@@ -217,9 +227,9 @@
                 <div class="kiro-eye" id="eyeR"></div>
             </div>
         </div>
-        <div class="speech" id="speech"></div>
     </div>
 
+    <div class="speech" id="speech"></div>
     <div class="hint">Kiro를 잡아보세요</div>
     <div class="counter" id="counter">attempts: 0</div>
 
@@ -230,7 +240,6 @@
     </div>
 
     <script>
-        const cursor = document.getElementById('cursor');
         const kiro = document.getElementById('kiro');
         const speech = document.getElementById('speech');
         const counter = document.getElementById('counter');
@@ -244,7 +253,7 @@
             const vh = window.innerHeight;
             const frameW = Math.floor(200 + Math.random() * (vw * 0.5));
             const frameH = Math.floor(200 + Math.random() * (vh * 0.5));
-            const rotation = (Math.random() - 0.5) * 12; // -6 ~ 6도
+            const rotation = (Math.random() - 0.5) * 12;
 
             gameFrame.style.width = frameW + 'px';
             gameFrame.style.height = frameH + 'px';
@@ -265,7 +274,7 @@
         let caught = false;
         let lastTrailTime = 0;
         let speechTimeout = null;
-        let catchCount = 0; // 잡히기 위한 근접 횟수
+        let catchCount = 0;
 
         const speeches = [
             '가까이 오지 마...',
@@ -282,22 +291,70 @@
             '...한 번만 더 가까이 와봐',
         ];
 
-        // 커서 따라다니기
-        document.addEventListener('mousemove', (e) => {
-            cursor.style.left = e.clientX + 'px';
-            cursor.style.top = e.clientY + 'px';
+        // 장애물 생성
+        function createObstacles() {
+            // 기존 장애물 제거
+            gameFrame.querySelectorAll('.obstacle-dot, .obstacle-line, .obstacle-rect').forEach(el => el.remove());
 
-            // 게임 프레임 내 좌표로 변환
+            const fw = frameDimensions.frameW;
+            const fh = frameDimensions.frameH;
+
+            // 점 (4~7개)
+            const dotCount = 4 + Math.floor(Math.random() * 4);
+            for (let i = 0; i < dotCount; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'obstacle-dot';
+                const size = 4 + Math.random() * 8;
+                dot.style.width = size + 'px';
+                dot.style.height = size + 'px';
+                dot.style.left = (Math.random() * (fw - size)) + 'px';
+                dot.style.top = (Math.random() * (fh - size)) + 'px';
+                gameFrame.appendChild(dot);
+            }
+
+            // 선 (2~4개)
+            const lineCount = 2 + Math.floor(Math.random() * 3);
+            for (let i = 0; i < lineCount; i++) {
+                const line = document.createElement('div');
+                line.className = 'obstacle-line';
+                const length = 40 + Math.random() * 100;
+                const angle = Math.random() * 360;
+                line.style.width = length + 'px';
+                line.style.height = '1.5px';
+                line.style.left = (Math.random() * (fw - 50)) + 'px';
+                line.style.top = (Math.random() * (fh - 50)) + 'px';
+                line.style.transform = `rotate(${angle}deg)`;
+                gameFrame.appendChild(line);
+            }
+
+            // 면 (1~3개)
+            const rectCount = 1 + Math.floor(Math.random() * 3);
+            for (let i = 0; i < rectCount; i++) {
+                const rect = document.createElement('div');
+                rect.className = 'obstacle-rect';
+                const rw = 30 + Math.random() * 80;
+                const rh = 30 + Math.random() * 60;
+                const angle = (Math.random() - 0.5) * 30;
+                rect.style.width = rw + 'px';
+                rect.style.height = rh + 'px';
+                rect.style.left = (Math.random() * (fw - rw)) + 'px';
+                rect.style.top = (Math.random() * (fh - rh)) + 'px';
+                rect.style.transform = `rotate(${angle}deg)`;
+                gameFrame.appendChild(rect);
+            }
+        }
+
+        createObstacles();
+
+        // 마우스
+        document.addEventListener('mousemove', (e) => {
             const rect = gameFrame.getBoundingClientRect();
             mouseX = e.clientX - rect.left;
             mouseY = e.clientY - rect.top;
         });
 
-        // 터치 지원
+        // 터치
         document.addEventListener('touchmove', (e) => {
-            cursor.style.left = e.touches[0].clientX + 'px';
-            cursor.style.top = e.touches[0].clientY + 'px';
-
             const rect = gameFrame.getBoundingClientRect();
             mouseX = e.touches[0].clientX - rect.left;
             mouseY = e.touches[0].clientY - rect.top;
@@ -316,7 +373,6 @@
             if (dist < 50) {
                 catchCount++;
                 if (catchCount >= 3) {
-                    // 잡힘!
                     caught = true;
                     caughtOverlay.classList.add('show');
                 }
@@ -334,7 +390,6 @@
             const dy = mouseY - (kiroY + 40);
             const dist = Math.sqrt(dx * dx + dy * dy);
 
-            // 마우스에서 도망가는 힘
             const fleeRadius = 200;
             if (dist < fleeRadius) {
                 const force = (1 - dist / fleeRadius) * 15;
@@ -344,7 +399,6 @@
 
                 kiro.classList.add('scared');
 
-                // 말풍선
                 if (dist < 120 && Math.random() > 0.97) {
                     showSpeech();
                 }
@@ -352,18 +406,13 @@
                 kiro.classList.remove('scared');
             }
 
-            // 점점 잡히기 쉬워짐 (attempts 많으면 속도 감소)
             const slowFactor = Math.max(0.85, 0.98 - attempts * 0.001);
-
-            // 마찰
             kiroVX *= slowFactor;
             kiroVY *= slowFactor;
 
-            // 위치 업데이트
             kiroX += kiroVX;
             kiroY += kiroVY;
 
-            // 벽 바운스 (탱탱볼) — 프레임 기준
             const w = frameDimensions.frameW - 80;
             const h = frameDimensions.frameH - 80;
 
@@ -375,9 +424,12 @@
             kiro.style.left = kiroX + 'px';
             kiro.style.top = kiroY + 'px';
 
-            // 말풍선 위치
-            speech.style.left = (kiroX + 40) + 'px';
-            speech.style.top = (kiroY - 30) + 'px';
+            // 말풍선 위치 (fixed 기준)
+            const frameRect = gameFrame.getBoundingClientRect();
+            const kiroScreenX = frameRect.left + kiroX + 40;
+            const kiroScreenY = frameRect.top + kiroY - 10;
+            speech.style.left = kiroScreenX + 'px';
+            speech.style.top = kiroScreenY + 'px';
 
             // 궤적
             const now = Date.now();
@@ -425,8 +477,8 @@
             counter.textContent = 'attempts: 0';
             caughtOverlay.classList.remove('show');
 
-            // 새로운 랜덤 프레임
             frameDimensions = randomizeFrame();
+            createObstacles();
 
             kiroX = Math.random() * (frameDimensions.frameW - 80);
             kiroY = Math.random() * (frameDimensions.frameH - 80);
