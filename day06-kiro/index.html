@@ -15,32 +15,13 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            cursor: none;
+            cursor: default;
         }
 
         .game-frame {
             position: relative;
             background: #000000;
             transition: width 0.3s, height 0.3s, transform 0.3s;
-        }
-
-        /* 가상 커서 */
-        .virtual-cursor {
-            position: fixed;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: #000;
-            pointer-events: none;
-            z-index: 1000;
-            transform: translate(-50%, -50%);
-            transition: width 0.1s, height 0.1s;
-        }
-
-        .virtual-cursor.near-kiro {
-            width: 16px;
-            height: 16px;
-            background: #333;
         }
 
         .back-link {
@@ -69,6 +50,7 @@
             user-select: none;
             transition: box-shadow 0.2s;
             z-index: 10;
+            cursor: pointer;
         }
 
         .kiro.scared {
@@ -178,6 +160,7 @@
             user-select: none;
             z-index: 9;
             animation: cloneAppear 0.3s ease-out;
+            cursor: pointer;
         }
 
         @keyframes cloneAppear {
@@ -282,7 +265,6 @@
 </head>
 <body>
     <a href="/" class="back-link">&larr; Home</a>
-    <div class="virtual-cursor" id="virtualCursor"></div>
 
     <div class="game-frame" id="gameFrame">
         <div class="kiro" id="kiro">
@@ -310,13 +292,6 @@
         const caughtOverlay = document.getElementById('caughtOverlay');
         const retryBtn = document.getElementById('retryBtn');
         const gameFrame = document.getElementById('gameFrame');
-        const virtualCursor = document.getElementById('virtualCursor');
-
-        // 가상 커서 위치 (장애물에 막힘)
-        let vcX = window.innerWidth / 2;
-        let vcY = window.innerHeight / 2;
-        let realMouseX = vcX;
-        let realMouseY = vcY;
 
         // 랜덤 크기와 각도 설정
         function randomizeFrame() {
@@ -488,7 +463,18 @@
             });
         }
 
-        // 마우스 충돌은 가상 커서에서 처리
+        // 마우스도 장애물에 막힘 체크 — 마우스 위치를 장애물 밖으로 보정
+        function isMouseBlocked() {
+            obstacles.forEach(ob => {
+                if (ob.type === 'rect') {
+                    if (mouseX > ob.x && mouseX < ob.x + ob.w && mouseY > ob.y && mouseY < ob.y + ob.h) {
+                        // 마우스가 면 장애물 안에 있으면 무력화
+                        mouseX = -1000;
+                        mouseY = -1000;
+                    }
+                }
+            });
+        }
 
         createObstacles();
 
@@ -509,71 +495,19 @@
         }
         scheduleFrameChange();
 
-        // 마우스 → 가상 커서 업데이트
+        // 마우스
         document.addEventListener('mousemove', (e) => {
-            realMouseX = e.clientX;
-            realMouseY = e.clientY;
+            const rect = gameFrame.getBoundingClientRect();
+            mouseX = e.clientX - rect.left;
+            mouseY = e.clientY - rect.top;
         });
 
         // 터치
         document.addEventListener('touchmove', (e) => {
-            realMouseX = e.touches[0].clientX;
-            realMouseY = e.touches[0].clientY;
-        });
-
-        // 가상 커서를 프레임 좌표로 변환 + 장애물 충돌
-        function updateVirtualCursor() {
-            // 가상 커서를 실제 마우스 쪽으로 이동 시도
-            const speed = 0.3;
-            let newVcX = vcX + (realMouseX - vcX) * speed;
-            let newVcY = vcY + (realMouseY - vcY) * speed;
-
-            // 프레임 내 좌표로 변환
             const rect = gameFrame.getBoundingClientRect();
-            const localX = newVcX - rect.left;
-            const localY = newVcY - rect.top;
-
-            // 장애물 충돌 체크
-            let blocked = false;
-            for (const ob of obstacles) {
-                if (ob.type === 'rect') {
-                    if (localX > ob.x && localX < ob.x + ob.w && localY > ob.y && localY < ob.y + ob.h) {
-                        blocked = true;
-                        break;
-                    }
-                } else if (ob.type === 'circle') {
-                    const dx = localX - ob.x;
-                    const dy = localY - ob.y;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-                    if (dist < (ob.r - 40 + 8)) { // 장애물 실제 크기 + 커서 크기
-                        blocked = true;
-                        break;
-                    }
-                }
-            }
-
-            if (!blocked) {
-                vcX = newVcX;
-                vcY = newVcY;
-            }
-
-            virtualCursor.style.left = vcX + 'px';
-            virtualCursor.style.top = vcY + 'px';
-
-            // Kiro에게 전달하는 마우스 좌표는 가상 커서 기준
-            mouseX = vcX - rect.left;
-            mouseY = vcY - rect.top;
-
-            // Kiro 근처면 커서 크게
-            const dx = mouseX - (kiroX + 40);
-            const dy = mouseY - (kiroY + 40);
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist < 60) {
-                virtualCursor.classList.add('near-kiro');
-            } else {
-                virtualCursor.classList.remove('near-kiro');
-            }
-        }
+            mouseX = e.touches[0].clientX - rect.left;
+            mouseY = e.touches[0].clientY - rect.top;
+        });
 
         // 클릭 시 잡기 시도
         document.addEventListener('click', (e) => {
@@ -630,7 +564,7 @@
 
             // 장애물 충돌
             collideWithObstacles();
-            updateVirtualCursor();
+            isMouseBlocked();
 
             const w = frameDimensions.frameW - 80;
             const h = frameDimensions.frameH - 80;
