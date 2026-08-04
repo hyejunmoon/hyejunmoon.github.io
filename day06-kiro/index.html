@@ -148,6 +148,54 @@
             pointer-events: none;
         }
 
+        /* 분신 — 가짜 Kiro */
+        .clone {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+            user-select: none;
+            z-index: 9;
+            animation: cloneAppear 0.3s ease-out;
+            cursor: default;
+        }
+
+        @keyframes cloneAppear {
+            0% { transform: scale(0); opacity: 0; }
+            60% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes cloneDisappear {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(0); opacity: 0; }
+        }
+
+        .clone-face {
+            display: flex;
+            gap: 14px;
+            align-items: center;
+        }
+
+        /* 분신 눈 변형들 */
+        .clone-eye {
+            border-radius: 50%;
+            background: #333;
+            transition: all 0.15s;
+        }
+
+        .clone-eye.type-big { width: 14px; height: 14px; }
+        .clone-eye.type-small { width: 6px; height: 6px; }
+        .clone-eye.type-oval { width: 8px; height: 12px; border-radius: 40%; }
+        .clone-eye.type-wide { width: 12px; height: 8px; border-radius: 40%; }
+        .clone-eye.type-dot { width: 5px; height: 5px; }
+        .clone-eye.type-slit { width: 10px; height: 4px; border-radius: 2px; }
+
         /* 안내 */
         .hint {
             position: fixed;
@@ -275,6 +323,21 @@
         let lastTrailTime = 0;
         let speechTimeout = null;
         let catchCount = 0;
+        let clones = [];
+        let cloneTimer = null;
+
+        // 분신 눈 타입들
+        const eyeTypes = [
+            ['type-big', 'type-big'],
+            ['type-small', 'type-small'],
+            ['type-oval', 'type-oval'],
+            ['type-wide', 'type-wide'],
+            ['type-dot', 'type-dot'],
+            ['type-slit', 'type-slit'],
+            ['type-big', 'type-small'],     // 짝짝이
+            ['type-oval', 'type-dot'],      // 짝짝이
+            ['type-wide', 'type-slit'],     // 짝짝이
+        ];
 
         const speeches = [
             '가까이 오지 마...',
@@ -469,6 +532,64 @@
             }, 2000);
         }
 
+        // 분신술
+        function spawnClone() {
+            const fw = frameDimensions.frameW;
+            const fh = frameDimensions.frameH;
+
+            const clone = document.createElement('div');
+            clone.className = 'clone';
+
+            // 랜덤 눈 타입 선택
+            const eyeType = eyeTypes[Math.floor(Math.random() * eyeTypes.length)];
+
+            clone.innerHTML = `
+                <div class="clone-face">
+                    <div class="clone-eye ${eyeType[0]}"></div>
+                    <div class="clone-eye ${eyeType[1]}"></div>
+                </div>
+            `;
+
+            clone.style.left = (Math.random() * (fw - 80)) + 'px';
+            clone.style.top = (Math.random() * (fh - 80)) + 'px';
+
+            // 가짜 클릭하면 attempts만 증가 + 분신 사라짐
+            clone.addEventListener('click', (e) => {
+                e.stopPropagation();
+                attempts++;
+                counter.textContent = `attempts: ${attempts}`;
+                clone.style.animation = 'cloneDisappear 0.2s ease forwards';
+                setTimeout(() => clone.remove(), 200);
+                clones = clones.filter(c => c !== clone);
+            });
+
+            gameFrame.appendChild(clone);
+            clones.push(clone);
+
+            // 일정 시간 후 자동 소멸
+            setTimeout(() => {
+                if (clone.parentNode) {
+                    clone.style.animation = 'cloneDisappear 0.3s ease forwards';
+                    setTimeout(() => clone.remove(), 300);
+                    clones = clones.filter(c => c !== clone);
+                }
+            }, 3000 + Math.random() * 2000);
+        }
+
+        // 주기적으로 분신 생성 (3~6초마다)
+        function scheduleClone() {
+            if (caught) return;
+            const delay = 3000 + Math.random() * 3000;
+            cloneTimer = setTimeout(() => {
+                if (!caught && clones.length < 3) {
+                    spawnClone();
+                }
+                scheduleClone();
+            }, delay);
+        }
+
+        scheduleClone();
+
         // 다시 하기
         retryBtn.addEventListener('click', () => {
             caught = false;
@@ -477,8 +598,14 @@
             counter.textContent = 'attempts: 0';
             caughtOverlay.classList.remove('show');
 
+            // 분신 제거
+            clones.forEach(c => c.remove());
+            clones = [];
+            if (cloneTimer) clearTimeout(cloneTimer);
+
             frameDimensions = randomizeFrame();
             createObstacles();
+            scheduleClone();
 
             kiroX = Math.random() * (frameDimensions.frameW - 80);
             kiroY = Math.random() * (frameDimensions.frameH - 80);
